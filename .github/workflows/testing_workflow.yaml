@@ -10,7 +10,10 @@ jobs:
   testing_job: # Define a job named `testing_job`  
     runs-on: macos-latest # Run the job on the `macos-latest` operating system  
     steps:  
-    - uses: actions/checkout@v3 # Use the `actions/checkout` action to check out the repository's code  
+    - uses: actions/checkout@v4 # Use the `actions/checkout` action to check out the repository's code  
+    - name: Select Xcode Version
+      run: |
+        sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
     - name: Install dependencies
       run: |
         bundle install
