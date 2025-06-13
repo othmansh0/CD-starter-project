@@ -40,6 +40,11 @@ struct ContentView: View {
                             resultText = "\(viewModel.add(a: a, b: b))"
                         }
                     }
+                    Button("Subtract") {
+                        if let a = Int(firstNumber), let b = Int(secondNumber) {
+                            resultText = "\(viewModel.subtract(a: a, b: b))"
+                        }
+                    }
                     Button("Multiply") {
                         if let a = Int(firstNumber), let b = Int(secondNumber) {
                             resultText = "\(viewModel.multiply(a: a, b: b))"
@@ -52,6 +57,8 @@ struct ContentView: View {
                     }
                 }
                 Text("Result: \(resultText)")
+                    .font(.headline)
+                    .foregroundColor(.blue)
             }.padding()
         }
         .padding()
