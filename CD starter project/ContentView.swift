@@ -16,6 +16,7 @@ struct ContentView: View {
     
     var body: some View {
         VStack(spacing: 20) {
+            // Counter section with increment and reset functionality
             Text("Count: \(viewModel.count)")
                 .font(.largeTitle)
             HStack(spacing: 20) {
@@ -27,6 +28,7 @@ struct ContentView: View {
                 }
             }
             Divider()
+            // Calculator section with basic arithmetic operations
             VStack(spacing: 10) {
                 TextField("First Number", text: $firstNumber)
                     .keyboardType(.numberPad)
