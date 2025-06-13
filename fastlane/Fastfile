@@ -1,0 +1,26 @@
+app_store_connect_api_key(
+  key_id: ENV["API_KEY_ID"],
+  issuer_id: ENV["API_ISSUER_ID"],
+  key_filepath: "./AuthKey.p8"
+)
+
+lane :test do
+  run_tests(
+    project: "CD starter project.xcodeproj",
+    scheme: "CD starter project",
+    device: "iPhone 15",
+    clean: true
+  )
+end
+
+lane :ci_build do
+  build_app(
+    scheme: "CD starter project",
+    export_method: "app-store",       # or "ad-hoc", etc.
+    export_options: {
+      provisioningProfiles: {
+        "com.othmanshahrouri.CD-starter-project" => ""    # leave empty for automatic
+      }
+    }
+  )
+end

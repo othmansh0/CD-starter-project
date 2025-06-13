@@ -1,6 +1,6 @@
 # This script defines a GitHub Actions workflow that is triggered when a pull request is made to the `dev` branch, or when manually dispatched.        
 
-name: YourProjectName testing workflow # Workflow name
+name: CD starter project testing workflow # Workflow name
 run-name: Run by @${{ github.actor }}  # Workflow runner
 on:  
   workflow_dispatch: # Trigger the workflow when it is manually dispatched  
@@ -10,18 +10,10 @@ jobs:
   testing_job: # Define a job named `testing_job`  
     runs-on: macos-latest # Run the job on the `macos-latest` operating system  
     steps:  
-    - uses: actions/checkout@v2 # Use the `actions/checkout` action to check out the repository's code  
-    - uses: actions/cache@v2 # Use the `actions/cache` action to cache the Pods directory  
-      with:  
-        path: Pods  
-        key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}  
-        restore-keys: |  
-          ${{ runner.os }}-pods-  
-    - name: CocoaPods Install # Install CocoaPods dependencies  
-      run: |  
-        cd YourProjectName # Position yourself inside the file that contains your podfile  
-        pod install  
-    - name: Test # Run tests for the BBL project  
-      run: |  
-        cd YourProjectName  # Position yourself inside the file that contains your YourProjectName.xcworkspace file
-        xcodebuild -workspace YourProjectName.xcworkspace -scheme BBL -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' test  
+    - uses: actions/checkout@v3 # Use the `actions/checkout` action to check out the repository's code  
+    - name: Install fastlane
+      run: |
+        gem install fastlane
+    - name: Run Tests
+      run: |
+        fastlane test  
