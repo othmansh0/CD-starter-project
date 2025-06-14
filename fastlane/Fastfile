@@ -36,7 +36,16 @@ platform :ios do
     )
     puts "✅ API key setup successful"
     
-    puts "🏗️  Building for App Store distribution with automatic signing..."
+    puts "📱 Downloading provisioning profiles..."
+    # Download provisioning profiles using the API key
+    sigh(
+      app_identifier: "com.othmanshahrouri.cd.starter.project",
+      readonly: true,
+      skip_install: false
+    )
+    puts "✅ Provisioning profiles downloaded"
+    
+    puts "🏗️  Building for App Store distribution..."
     build_app(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
@@ -44,7 +53,6 @@ platform :ios do
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
-      xcargs: "-allowProvisioningUpdates",
       export_options: {
         method: "app-store",
         uploadBitcode: false,
