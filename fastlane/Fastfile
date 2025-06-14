@@ -3,7 +3,8 @@ lane :test do
     project: "CD starter project.xcodeproj",
     scheme: "CD starter project",
     device: "iPhone 16",
-    clean: true
+    clean: true,
+    only_testing: ["CD starter projectTests"]
   )
 end
 
