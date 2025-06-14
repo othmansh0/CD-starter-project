@@ -6,6 +6,7 @@
 //
 import SwiftUI
 
+// ViewModel for managing counter state and arithmetic operations
 class CounterViewModel: ObservableObject {
     @Published private(set) var count: Int = 0
 
@@ -19,6 +20,10 @@ class CounterViewModel: ObservableObject {
     
     func add(a: Int, b: Int) -> Int {
         return a + b
+    }
+    
+    func subtract(a: Int, b: Int) -> Int {
+        return a - b
     }
     
     func multiply(a: Int, b: Int) -> Int {

@@ -16,6 +16,7 @@ struct ContentView: View {
     
     var body: some View {
         VStack(spacing: 20) {
+            // Counter section with increment and reset functionality
             Text("Count: \(viewModel.count)")
                 .font(.largeTitle)
             HStack(spacing: 20) {
@@ -27,6 +28,7 @@ struct ContentView: View {
                 }
             }
             Divider()
+            // Calculator section with basic arithmetic operations
             VStack(spacing: 10) {
                 TextField("First Number", text: $firstNumber)
                     .keyboardType(.numberPad)
@@ -40,6 +42,11 @@ struct ContentView: View {
                             resultText = "\(viewModel.add(a: a, b: b))"
                         }
                     }
+                    Button("Subtract") {
+                        if let a = Int(firstNumber), let b = Int(secondNumber) {
+                            resultText = "\(viewModel.subtract(a: a, b: b))"
+                        }
+                    }
                     Button("Multiply") {
                         if let a = Int(firstNumber), let b = Int(secondNumber) {
                             resultText = "\(viewModel.multiply(a: a, b: b))"
@@ -51,7 +58,13 @@ struct ContentView: View {
                         resultText = viewModel.isEven(number: n) ? "Even" : "Odd"
                     }
                 }
+                
+                Divider()
+                    .padding(.vertical, 5)
+                
                 Text("Result: \(resultText)")
+                    .font(.headline)
+                    .foregroundColor(.blue)
             }.padding()
         }
         .padding()

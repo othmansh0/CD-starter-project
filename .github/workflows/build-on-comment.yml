@@ -93,10 +93,10 @@ jobs:
               "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
           fi
 
-      - name: Checkout latest main branch (where fixes are)
+      - name: Checkout PR branch (where latest fixes are)
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ steps.pr_info.outputs.branch }}
           fetch-depth: 1
 
       - name: Setup Xcode
