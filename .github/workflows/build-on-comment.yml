@@ -107,6 +107,36 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
 
+      - name: Debug Fastlane Configuration
+        run: |
+          echo "=== Current Directory ==="
+          pwd
+          ls -la
+          echo ""
+          echo "=== Fastfile Content ==="
+          cat fastlane/Fastfile
+          echo ""
+          echo "=== Gemfile Content ==="
+          cat Gemfile
+          echo ""
+          echo "=== Bundle Info ==="
+          bundle list | grep fastlane
+          echo ""
+          echo "=== Environment Variables ==="
+          echo "APP_STORE_CONNECT_API_KEY_ID: ${APP_STORE_CONNECT_API_KEY_ID:+SET}"
+          echo "APP_STORE_CONNECT_API_ISSUER_ID: ${APP_STORE_CONNECT_API_ISSUER_ID:+SET}"
+          echo "APP_STORE_CONNECT_API_KEY_CONTENT: ${APP_STORE_CONNECT_API_KEY_CONTENT:+SET}"
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+
+      - name: Clear Fastlane Cache
+        run: |
+          rm -rf ~/.fastlane
+          rm -rf /tmp/fastlane*
+          rm -f AuthKey.p8
+
       - name: Run Fastlane Build
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
