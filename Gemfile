@@ -1,4 +1,5 @@
 source "https://rubygems.org"
 
-# Fastlane (includes match)
-gem "fastlane", "~> 2.200.0"
+gem "fastlane", "2.228.0"
+gem "cocoapods", "~> 1.15"
+gem "xcpretty", "~> 0.4" 
