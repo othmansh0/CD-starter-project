@@ -105,22 +105,40 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler-cache: true
+          bundler-cache: false
 
-      - name: Debug Fastlane Configuration
+      - name: Force Clean Fastlane Setup
         run: |
-          echo "=== Current Directory ==="
+          # Remove any existing Fastlane installations
+          gem uninstall fastlane --all --force || true
+          gem uninstall fastlane-sirp --all --force || true
+          
+          # Clear all caches
+          rm -rf ~/.fastlane
+          rm -rf /tmp/fastlane*
+          rm -f AuthKey.p8
+          rm -f .env
+          rm -f fastlane/.env
+          rm -rf vendor/bundle
+          rm -f Gemfile.lock
+          
+          # Install bundler and gems fresh
+          gem install bundler --no-document
+          bundle config --local path vendor/bundle
+          bundle config --local clean true
+          bundle install --verbose
+          
+          echo "=== Installed Fastlane Version ==="
+          bundle exec fastlane --version
+
+      - name: Debug Environment Before Build
+        run: |
+          echo "=== Working Directory ==="
           pwd
           ls -la
           echo ""
           echo "=== Fastfile Content ==="
           cat fastlane/Fastfile
-          echo ""
-          echo "=== Gemfile Content ==="
-          cat Gemfile
-          echo ""
-          echo "=== Bundle Info ==="
-          bundle list | grep fastlane
           echo ""
           echo "=== Environment Variables ==="
           echo "APP_STORE_CONNECT_API_KEY_ID: ${APP_STORE_CONNECT_API_KEY_ID:+SET}"
@@ -130,28 +148,6 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
-
-      - name: Clear Fastlane Cache and Old Configs
-        run: |
-          rm -rf ~/.fastlane
-          rm -rf /tmp/fastlane*
-          rm -f AuthKey.p8
-          rm -f .env
-          rm -f fastlane/.env
-          # Force bundle to use our Gemfile
-          bundle config --local path vendor/bundle
-          bundle install --quiet
-
-      - name: Verify Fastlane Setup
-        run: |
-          echo "=== Fastlane Version ==="
-          bundle exec fastlane --version
-          echo ""
-          echo "=== Ruby Version ==="
-          ruby --version
-          echo ""
-          echo "=== Bundle Check ==="
-          bundle check
 
       - name: Run Fastlane Build
         env:
