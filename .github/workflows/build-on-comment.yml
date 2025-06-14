@@ -93,10 +93,11 @@ jobs:
               "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
           fi
 
-      - name: Checkout code
+      - name: Checkout latest main branch (where fixes are)
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.pr_info.outputs.branch }}
+          ref: main
+          fetch-depth: 1
 
       - name: Setup Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
