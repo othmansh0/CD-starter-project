@@ -11,12 +11,11 @@ platform :ios do
     )
   end
 
-  desc "Build and archive for CI - NO API KEY VERSION"
+  desc "Build and upload to TestFlight"
   lane :ci_build do
-    puts "🔍 Starting ci_build lane WITHOUT API key setup"
-    puts "🔍 This version completely bypasses API key to isolate the issue"
+    puts "🔍 Starting ci_build lane for TestFlight upload"
     
-    # Debug environment variables but don't use them
+    # Debug environment variables
     key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"]
     issuer_id = ENV["APP_STORE_CONNECT_API_ISSUER_ID"] 
     key_content = ENV["APP_STORE_CONNECT_API_KEY_CONTENT"]
@@ -25,20 +24,65 @@ platform :ios do
     puts "🔍 Debug: issuer_id present: #{!issuer_id.nil? && !issuer_id.empty?}"
     puts "🔍 Debug: key_content present: #{!key_content.nil? && !key_content.empty?}"
     
-    puts "⚠️  INTENTIONALLY SKIPPING API key setup to test build process"
-    puts "🏗️  Starting build process without signing..."
-    
-    # Build the app without any API key setup
-    build_app(
-      project: "CD starter project.xcodeproj",
-      scheme: "CD starter project",
-      export_method: "development",
-      output_directory: "./build",
-      output_name: "CD_starter_project.ipa",
-      skip_codesigning: true,
-      skip_package_ipa: false
-    )
-    
-    puts "✅ Build process completed successfully!"
+    # Setup App Store Connect API key for TestFlight upload
+    if key_id && issuer_id && key_content && 
+       !key_id.empty? && !issuer_id.empty? && !key_content.empty?
+      
+      puts "🔑 Setting up App Store Connect API key for TestFlight..."
+      begin
+        app_store_connect_api_key(
+          key_id: key_id,
+          issuer_id: issuer_id,
+          key_content: key_content,
+          duration: 1200,
+          in_house: false
+        )
+        puts "✅ API key setup successful"
+        
+        puts "🏗️  Building for App Store distribution..."
+        
+        # Build and export for App Store
+        build_app(
+          project: "CD starter project.xcodeproj",
+          scheme: "CD starter project",
+          export_method: "app-store",
+          output_directory: "./build",
+          output_name: "CD_starter_project.ipa"
+        )
+        
+        puts "📤 Uploading to TestFlight..."
+        
+        # Upload to TestFlight
+        upload_to_testflight(
+          skip_waiting_for_build_processing: true,
+          skip_submission: true,
+          distribute_external: false,
+          notify_external_testers: false
+        )
+        
+        puts "✅ TestFlight upload completed successfully!"
+        
+      rescue => e
+        puts "❌ API key setup failed: #{e.message}"
+        puts "⚠️  Cannot proceed with TestFlight upload without valid API key"
+        raise e
+      end
+    else
+      puts "❌ App Store Connect API key not configured"
+      puts "🔍 Missing: key_id=#{key_id.nil? || key_id.empty?}, issuer_id=#{issuer_id.nil? || issuer_id.empty?}, key_content=#{key_content.nil? || key_content.empty?}"
+      puts "🏗️  Building archive only (no signing/upload)..."
+      
+      # Just build and archive without signing for verification
+      build_app(
+        project: "CD starter project.xcodeproj",
+        scheme: "CD starter project",
+        skip_codesigning: true,
+        skip_package_ipa: true,
+        archive_path: "./build/CD_starter_project.xcarchive",
+        output_directory: "./build"
+      )
+      
+      puts "✅ Archive build completed successfully (no signing required)!"
+    end
   end
 end 
