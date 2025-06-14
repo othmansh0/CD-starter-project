@@ -13,14 +13,21 @@ platform :ios do
 
   desc "Build and archive for CI"
   lane :ci_build do
-    # Setup App Store Connect API key from environment variables
-    app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
-      duration: 1200,
-      in_house: false
-    )
+    # Setup App Store Connect API key from environment variables (only if all required vars are present)
+    if ENV["APP_STORE_CONNECT_API_KEY_ID"] && ENV["APP_STORE_CONNECT_API_ISSUER_ID"] && ENV["APP_STORE_CONNECT_API_KEY_CONTENT"] && 
+       !ENV["APP_STORE_CONNECT_API_KEY_ID"].empty? && !ENV["APP_STORE_CONNECT_API_ISSUER_ID"].empty? && !ENV["APP_STORE_CONNECT_API_KEY_CONTENT"].empty?
+      
+      puts "🔑 Setting up App Store Connect API key..."
+      app_store_connect_api_key(
+        key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+        issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+        key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+        duration: 1200,
+        in_house: false
+      )
+    else
+      puts "⚠️  App Store Connect API key not configured - building without signing"
+    end
 
     # Build the app
     build_app(
@@ -28,7 +35,8 @@ platform :ios do
       scheme: "CD starter project",
       export_method: "development",
       output_directory: "./build",
-      output_name: "CD_starter_project.ipa"
+      output_name: "CD_starter_project.ipa",
+      skip_codesigning: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"].nil? || ENV["APP_STORE_CONNECT_API_KEY_CONTENT"].empty?
     )
   end
 end 
