@@ -40,7 +40,6 @@ platform :ios do
     # Download provisioning profiles (sigh will handle certificates automatically)
     sigh(
       app_identifier: "com.othmanshahrouri.cd.starter.project",
-      readonly: false,
       skip_install: false,
       force: true,
       skip_certificate_verification: true
