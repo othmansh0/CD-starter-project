@@ -57,11 +57,9 @@ platform :ios do
         output_directory: "./build",
         output_name: "CD_starter_project",
         clean: true,
+        xcargs: "-allowProvisioningUpdates",
         export_options: {
-          method: "app-store",
-          provisioningProfiles: {
-            "com.othmanshahrouri.CD-starter-project" => "match AppStore com.othmanshahrouri.CD-starter-project"
-          }
+          method: "app-store"
         }
       )
       
