@@ -46,8 +46,10 @@ platform :ios do
     # Create AuthKey.p8 file from base64 content for xcodebuild
     require 'base64'
     decoded_key = Base64.decode64(key_content)
-    File.write("AuthKey_#{key_id}.p8", decoded_key)
-    puts "✅ AuthKey.p8 file created"
+    key_filename = "AuthKey_#{key_id}.p8"
+    key_absolute_path = File.expand_path(key_filename)
+    File.write(key_absolute_path, decoded_key)
+    puts "✅ AuthKey.p8 file created at: #{key_absolute_path}"
     
     puts "🏗️  Building for App Store distribution with automatic signing..."
     # Build the app for App Store distribution with automatic signing
@@ -58,7 +60,7 @@ platform :ios do
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
-      xcargs: "-allowProvisioningUpdates -authenticationKeyPath AuthKey_#{key_id}.p8 -authenticationKeyID #{key_id} -authenticationKeyIssuerID #{issuer_id}",
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{key_absolute_path} -authenticationKeyID #{key_id} -authenticationKeyIssuerID #{issuer_id}",
       export_options: {
         method: "app-store",
         uploadBitcode: false,
@@ -79,7 +81,7 @@ platform :ios do
     puts "✅ Successfully uploaded to TestFlight!"
     
     # Clean up the key file
-    File.delete("AuthKey_#{key_id}.p8") if File.exist?("AuthKey_#{key_id}.p8")
+    File.delete(key_absolute_path) if File.exist?(key_absolute_path)
     puts "🧹 Cleaned up AuthKey.p8 file"
   end
 end 
