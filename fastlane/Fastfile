@@ -1,1 +1,34 @@
- 
+default_platform(:ios)
+
+platform :ios do
+  desc "Run tests"
+  lane :test do
+    run_tests(
+      project: "CD starter project.xcodeproj",
+      scheme: "CD starter project",
+      device: "iPhone 16",
+      only_testing: ["CD starter projectTests"]
+    )
+  end
+
+  desc "Build and archive for CI"
+  lane :ci_build do
+    # Setup App Store Connect API key from environment variables
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      duration: 1200,
+      in_house: false
+    )
+
+    # Build the app
+    build_app(
+      project: "CD starter project.xcodeproj",
+      scheme: "CD starter project",
+      export_method: "development",
+      output_directory: "./build",
+      output_name: "CD_starter_project.ipa"
+    )
+  end
+end 
