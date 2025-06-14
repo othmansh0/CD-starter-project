@@ -58,6 +58,10 @@ struct ContentView: View {
                         resultText = viewModel.isEven(number: n) ? "Even" : "Odd"
                     }
                 }
+                
+                Divider()
+                    .padding(.vertical, 5)
+                
                 Text("Result: \(resultText)")
                     .font(.headline)
                     .foregroundColor(.blue)
