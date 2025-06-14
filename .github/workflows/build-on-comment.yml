@@ -152,7 +152,6 @@ jobs:
 
       - name: Run Fastlane Build
         env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.API_KEY_BASE64 }}
