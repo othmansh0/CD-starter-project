@@ -29,7 +29,7 @@ Run tests
 [bundle exec] fastlane ios ci_build
 ```
 
-Build and archive for CI
+Build and upload to TestFlight
 
 ----
 
