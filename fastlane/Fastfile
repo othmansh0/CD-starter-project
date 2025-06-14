@@ -24,81 +24,62 @@ platform :ios do
     puts "🔍 Debug: issuer_id present: #{!issuer_id.nil? && !issuer_id.empty?}"
     puts "🔍 Debug: key_content present: #{!key_content.nil? && !key_content.empty?}"
     
-    # Check if API keys are available for TestFlight upload
-    if key_id && issuer_id && key_content && 
-       !key_id.empty? && !issuer_id.empty? && !key_content.empty?
-      
-      puts "🔑 Setting up App Store Connect API key for TestFlight..."
-      begin
-        # Setup App Store Connect API key with explicit parameters
-        app_store_connect_api_key(
-          key_id: key_id,
-          issuer_id: issuer_id,
-          key_content: key_content,
-          is_key_content_base64: true,
-          duration: 1200,
-          in_house: false
-        )
-        puts "✅ API key setup successful"
-        
-        puts "🏗️  Building for App Store distribution..."
-        # Build the app for App Store distribution with automatic signing
-        build_app(
-          project: "CD starter project.xcodeproj",
-          scheme: "CD starter project",
-          export_method: "app-store",
-          output_directory: "./build",
-          output_name: "CD_starter_project",
-          clean: true,
-          xcargs: "-allowProvisioningUpdates",
-          export_options: {
-            method: "app-store"
-          }
-        )
-        
-        puts "🚀 Uploading to TestFlight..."
-        # Upload to TestFlight
-        upload_to_testflight(
-          skip_waiting_for_build_processing: true,
-          skip_submission: true,
-          changelog: "Automated build from GitHub Actions"
-        )
-        
-        puts "✅ Successfully uploaded to TestFlight!"
-        
-      rescue => e
-        puts "❌ TestFlight process failed: #{e.message}"
-        puts "⚠️  Falling back to archive-only build..."
-        
-        # Fallback to archive-only build
-        build_app(
-          project: "CD starter project.xcodeproj", 
-          scheme: "CD starter project",
-          skip_codesigning: true,
-          skip_package_ipa: true,
-          archive_path: "./build/CD_starter_project.xcarchive",
-          clean: true
-        )
-        
-        puts "✅ Archive build completed as fallback!"
-      end
-      
-    else
-      puts "⚠️  API keys not configured - building archive only"
-      puts "🔍 This version creates an archive without TestFlight upload"
-      
-      puts "🏗️  Starting build process without signing..."
-      # Build archive only (no signing/export)
-      build_app(
-        project: "CD starter project.xcodeproj", 
-        scheme: "CD starter project",
-        skip_codesigning: true,
-        skip_package_ipa: true,
-        archive_path: "./build/CD_starter_project.xcarchive",
-        clean: true
-      )
-      
-      puts "✅ Archive build completed successfully (no signing required)!"
+    # Ensure we have all required API keys
+    unless key_id && issuer_id && key_content && 
+           !key_id.empty? && !issuer_id.empty? && !key_content.empty?
+      UI.user_error!("❌ Missing App Store Connect API credentials. Please configure API_KEY_ID, API_ISSUER_ID, and API_KEY_BASE64 secrets.")
     end
+    
+    puts "🔑 Setting up App Store Connect API key..."
+    # Setup App Store Connect API key
+    app_store_connect_api_key(
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_content: key_content,
+      is_key_content_base64: true,
+      duration: 1200,
+      in_house: false
+    )
+    puts "✅ API key setup successful"
+    
+    puts "📝 Creating AuthKey.p8 file for xcodebuild..."
+    # Create AuthKey.p8 file from base64 content for xcodebuild
+    require 'base64'
+    decoded_key = Base64.decode64(key_content)
+    File.write("AuthKey_#{key_id}.p8", decoded_key)
+    puts "✅ AuthKey.p8 file created"
+    
+    puts "🏗️  Building for App Store distribution with automatic signing..."
+    # Build the app for App Store distribution with automatic signing
+    build_app(
+      project: "CD starter project.xcodeproj",
+      scheme: "CD starter project",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "CD_starter_project",
+      clean: true,
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath AuthKey_#{key_id}.p8 -authenticationKeyID #{key_id} -authenticationKeyIssuerID #{issuer_id}",
+      export_options: {
+        method: "app-store",
+        uploadBitcode: false,
+        uploadSymbols: true,
+        compileBitcode: false
+      }
+    )
+    puts "✅ Build completed successfully"
+    
+    puts "🚀 Uploading to TestFlight..."
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      changelog: "Automated build from GitHub Actions"
+    )
+    
+    puts "✅ Successfully uploaded to TestFlight!"
+    
+    # Clean up the key file
+    File.delete("AuthKey_#{key_id}.p8") if File.exist?("AuthKey_#{key_id}.p8")
+    puts "🧹 Cleaned up AuthKey.p8 file"
   end
 end 
