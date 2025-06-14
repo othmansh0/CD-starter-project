@@ -54,11 +54,16 @@ platform :ios do
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
+      codesigning_identity: "Apple Distribution",
       export_options: {
         method: "app-store",
         uploadBitcode: false,
         uploadSymbols: true,
-        compileBitcode: false
+        compileBitcode: false,
+        signingStyle: "manual",
+        provisioningProfiles: {
+          "com.othmanshahrouri.cd.starter.project" => "CD starter project App Store"
+        }
       }
     )
     puts "✅ Build completed successfully"
