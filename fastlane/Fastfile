@@ -37,8 +37,8 @@ platform :ios do
     puts "✅ API key setup successful"
     
     puts "📱 Downloading certificates and provisioning profiles..."
-    # Download and install certificates first
-    cert(
+    # Download existing certificates (don't create new ones)
+    get_certificates(
       development: false,
       output_path: "./certs"
     )
