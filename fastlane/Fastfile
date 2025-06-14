@@ -37,11 +37,11 @@ platform :ios do
     puts "✅ API key setup successful"
     
     puts "📱 Downloading provisioning profiles..."
-    # Download provisioning profiles (sigh will handle certificates automatically)
+    # Download existing provisioning profiles (read-only mode for Developer role)
     sigh(
       app_identifier: "com.othmanshahrouri.cd.starter.project",
+      readonly: true,
       skip_install: false,
-      force: true,
       skip_certificate_verification: true
     )
     puts "✅ Provisioning profiles downloaded"
