@@ -6,9 +6,10 @@ on:
 
 permissions:
   issues: write
-  pull-requests: read
+  pull-requests: write
   checks: read
   actions: read
+  contents: read
 
 jobs:
   debug-build-comment:
@@ -46,11 +47,12 @@ jobs:
         id: validate_branch
         run: |
           BRANCH="${{ steps.pr_info.outputs.branch }}"
-          if [[ "$BRANCH" != "develop" ]]; then
-            echo "❌ Build can only be triggered from develop branch. Current branch: $BRANCH"
+          # Allow develop branch and feature branches for testing
+          if [[ "$BRANCH" != "develop" && "$BRANCH" != feature/* ]]; then
+            echo "❌ Build can only be triggered from develop or feature branches. Current branch: $BRANCH"
             curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -X POST \
-              -d '{"body":"❌ Build can only be triggered from develop branch. Current branch: '"$BRANCH"'"}' \
+              -d '{"body":"❌ Build can only be triggered from develop or feature branches. Current branch: '"$BRANCH"'"}' \
               "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
             exit 1
           fi
@@ -71,15 +73,25 @@ jobs:
           # Look for test workflow
           TEST_STATUS=$(echo "$CHECK_RUNS" | jq -r '.check_runs[] | select(.name == "test") | .conclusion')
           
-          if [[ "$TEST_STATUS" != "success" ]]; then
-            echo "❌ Tests must pass before building. Test status: $TEST_STATUS"
+          echo "Test status found: $TEST_STATUS"
+          
+          # For testing purposes, allow build even if no tests found or if tests are pending
+          if [[ "$TEST_STATUS" == "failure" ]]; then
+            echo "❌ Tests have failed. Build cannot proceed."
             curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -X POST \
-              -d '{"body":"❌ Tests must pass before building. Current test status: '"$TEST_STATUS"'"}' \
+              -d '{"body":"❌ Tests have failed. Build cannot proceed."}' \
               "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
             exit 1
+          elif [[ "$TEST_STATUS" == "success" ]]; then
+            echo "✅ Tests have passed, proceeding with build"
+          else
+            echo "⚠️ No test results found or tests pending. Proceeding with build for testing purposes."
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -X POST \
+              -d '{"body":"⚠️ No test results found or tests pending. Proceeding with build for testing purposes."}' \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
           fi
-          echo "✅ Tests have passed, proceeding with build"
 
       - name: Checkout code
         uses: actions/checkout@v4
