@@ -131,11 +131,27 @@ jobs:
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
 
-      - name: Clear Fastlane Cache
+      - name: Clear Fastlane Cache and Old Configs
         run: |
           rm -rf ~/.fastlane
           rm -rf /tmp/fastlane*
           rm -f AuthKey.p8
+          rm -f .env
+          rm -f fastlane/.env
+          # Force bundle to use our Gemfile
+          bundle config --local path vendor/bundle
+          bundle install --quiet
+
+      - name: Verify Fastlane Setup
+        run: |
+          echo "=== Fastlane Version ==="
+          bundle exec fastlane --version
+          echo ""
+          echo "=== Ruby Version ==="
+          ruby --version
+          echo ""
+          echo "=== Bundle Check ==="
+          bundle check
 
       - name: Run Fastlane Build
         env:

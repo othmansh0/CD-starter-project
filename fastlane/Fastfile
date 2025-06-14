@@ -13,22 +13,42 @@ platform :ios do
 
   desc "Build and archive for CI"
   lane :ci_build do
-    # Setup App Store Connect API key from environment variables (only if all required vars are present)
-    if ENV["APP_STORE_CONNECT_API_KEY_ID"] && ENV["APP_STORE_CONNECT_API_ISSUER_ID"] && ENV["APP_STORE_CONNECT_API_KEY_CONTENT"] && 
-       !ENV["APP_STORE_CONNECT_API_KEY_ID"].empty? && !ENV["APP_STORE_CONNECT_API_ISSUER_ID"].empty? && !ENV["APP_STORE_CONNECT_API_KEY_CONTENT"].empty?
+    puts "🔍 Debug: Starting ci_build lane"
+    
+    # Debug environment variables
+    key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"]
+    issuer_id = ENV["APP_STORE_CONNECT_API_ISSUER_ID"] 
+    key_content = ENV["APP_STORE_CONNECT_API_KEY_CONTENT"]
+    
+    puts "🔍 Debug: key_id present: #{!key_id.nil? && !key_id.empty?}"
+    puts "🔍 Debug: issuer_id present: #{!issuer_id.nil? && !issuer_id.empty?}"
+    puts "🔍 Debug: key_content present: #{!key_content.nil? && !key_content.empty?}"
+    
+    # Only setup API key if ALL required environment variables are present and not empty
+    if key_id && issuer_id && key_content && 
+       !key_id.empty? && !issuer_id.empty? && !key_content.empty?
       
-      puts "🔑 Setting up App Store Connect API key..."
-      app_store_connect_api_key(
-        key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-        issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
-        key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
-        duration: 1200,
-        in_house: false
-      )
+      puts "🔑 Setting up App Store Connect API key with key_content..."
+      begin
+        app_store_connect_api_key(
+          key_id: key_id,
+          issuer_id: issuer_id,
+          key_content: key_content,
+          duration: 1200,
+          in_house: false
+        )
+        puts "✅ API key setup successful"
+      rescue => e
+        puts "❌ API key setup failed: #{e.message}"
+        puts "⚠️  Proceeding without API key setup"
+      end
     else
-      puts "⚠️  App Store Connect API key not configured - building without signing"
+      puts "⚠️  App Store Connect API key not fully configured - building without signing"
+      puts "🔍 Missing: key_id=#{key_id.nil? || key_id.empty?}, issuer_id=#{issuer_id.nil? || issuer_id.empty?}, key_content=#{key_content.nil? || key_content.empty?}"
     end
 
+    puts "🏗️  Starting build process..."
+    
     # Build the app
     build_app(
       project: "CD starter project.xcodeproj",
@@ -36,7 +56,9 @@ platform :ios do
       export_method: "development",
       output_directory: "./build",
       output_name: "CD_starter_project.ipa",
-      skip_codesigning: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"].nil? || ENV["APP_STORE_CONNECT_API_KEY_CONTENT"].empty?
+      skip_codesigning: key_content.nil? || key_content.empty?
     )
+    
+    puts "✅ Build process completed"
   end
 end 
