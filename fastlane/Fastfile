@@ -36,14 +36,21 @@ platform :ios do
     )
     puts "✅ API key setup successful"
     
-    puts "📱 Downloading provisioning profiles..."
-    # Download provisioning profiles using the API key
+    puts "📱 Downloading certificates and provisioning profiles..."
+    # Download and install certificates first
+    cert(
+      development: false,
+      output_path: "./certs"
+    )
+    
+    # Download provisioning profiles
     sigh(
       app_identifier: "com.othmanshahrouri.cd.starter.project",
-      readonly: true,
-      skip_install: false
+      readonly: false,
+      skip_install: false,
+      force: true
     )
-    puts "✅ Provisioning profiles downloaded"
+    puts "✅ Certificates and provisioning profiles downloaded"
     
     puts "🏗️  Building for App Store distribution..."
     build_app(
