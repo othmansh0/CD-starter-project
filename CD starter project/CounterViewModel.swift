@@ -5,6 +5,7 @@
 //  Created by Othman Shahrouri on 31/05/2025.
 //
 import SwiftUI
+import Foundation
 
 // ViewModel for managing counter state and arithmetic operations
 class CounterViewModel: ObservableObject {
@@ -32,5 +33,9 @@ class CounterViewModel: ObservableObject {
     
     func isEven(number: Int) -> Bool {
         return number % 2 == 0
+    }
+    
+    func power(base: Double, exponent: Double) -> Double {
+        return pow(base, exponent)
     }
 }
