@@ -42,13 +42,24 @@ platform :ios do
     begin
       auth_key_content = Base64.decode64(ENV['API_KEY_BASE64'])
       auth_key_path = "/tmp/AuthKey_#{ENV['API_KEY_ID']}.p8"
-      File.write(auth_key_path, auth_key_content)
+      
+      # Write the binary content directly to file
+      File.binwrite(auth_key_path, auth_key_content)
       
       # Debug: Check if file was created
       puts "📝 AuthKey file created at: #{auth_key_path}"
       puts "📝 File exists: #{File.exist?(auth_key_path)}"
       puts "📝 File size: #{File.size(auth_key_path)} bytes" if File.exist?(auth_key_path)
-      puts "📝 First 50 chars: #{auth_key_content[0..50]}" if auth_key_content
+      
+      # Verify it's a valid .p8 file by checking the header
+      if File.exist?(auth_key_path)
+        file_content = File.read(auth_key_path)
+        if file_content.include?("-----BEGIN PRIVATE KEY-----")
+          puts "✅ Valid .p8 file format detected"
+        else
+          puts "⚠️ Warning: File doesn't appear to be in .p8 format"
+        end
+      end
     rescue => e
       UI.user_error!("❌ Failed to create AuthKey.p8 file: #{e.message}")
     end
