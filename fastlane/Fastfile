@@ -13,9 +13,9 @@ platform :ios do
 
   desc "Build and upload to TestFlight"
   lane :ci_build do
-    key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"]
-    issuer_id = ENV["APP_STORE_CONNECT_API_ISSUER_ID"]
-    key_content = ENV["APP_STORE_CONNECT_API_KEY_CONTENT"]
+    key_id = ENV["API_KEY_ID"]
+    issuer_id = ENV["API_ISSUER_ID"]
+    key_content = ENV["API_KEY_BASE64"]
     
     puts "🔍 Starting ci_build lane for TestFlight upload"
     
@@ -39,8 +39,8 @@ platform :ios do
     puts "🏗️  Building for App Store distribution with automatic signing..."
     
     # Create AuthKey.p8 file from base64 content for xcodebuild
-    auth_key_content = Base64.decode64(ENV['APP_STORE_CONNECT_API_KEY_CONTENT'])
-    File.write("/tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_ID']}.p8", auth_key_content)
+    auth_key_content = Base64.decode64(ENV['API_KEY_BASE64'])
+    File.write("/tmp/AuthKey_#{ENV['API_KEY_ID']}.p8", auth_key_content)
     
     # Use gym with automatic signing and direct API key authentication
     gym(
@@ -50,7 +50,7 @@ platform :ios do
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
-      xcargs: "-allowProvisioningUpdates -authenticationKeyPath /tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_ID']}.p8 -authenticationKeyID #{ENV['APP_STORE_CONNECT_API_KEY_ID']} -authenticationKeyIssuerID #{ENV['APP_STORE_CONNECT_API_ISSUER_ID']}",
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath /tmp/AuthKey_#{ENV['API_KEY_ID']}.p8 -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']}",
       export_options: {
         method: "app-store",
         uploadBitcode: false,
