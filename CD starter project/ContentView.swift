@@ -61,6 +61,11 @@ struct ContentView: View {
                             }
                         }
                     }
+                    Button("Power") {
+                        if let a = Double(firstNumber), let b = Double(secondNumber) {
+                            resultText = String(format: "%.2f", viewModel.power(base: a, exponent: b))
+                        }
+                    }
                 }
                 Button("Check Even") {
                     if let n = Int(firstNumber) {
