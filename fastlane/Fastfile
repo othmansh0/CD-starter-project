@@ -39,8 +39,19 @@ platform :ios do
     puts "🏗️  Building for App Store distribution with automatic signing..."
     
     # Create AuthKey.p8 file from base64 content for xcodebuild
-    auth_key_content = Base64.decode64(ENV['API_KEY_BASE64'])
-    File.write("/tmp/AuthKey_#{ENV['API_KEY_ID']}.p8", auth_key_content)
+    begin
+      auth_key_content = Base64.decode64(ENV['API_KEY_BASE64'])
+      auth_key_path = "/tmp/AuthKey_#{ENV['API_KEY_ID']}.p8"
+      File.write(auth_key_path, auth_key_content)
+      
+      # Debug: Check if file was created
+      puts "📝 AuthKey file created at: #{auth_key_path}"
+      puts "📝 File exists: #{File.exist?(auth_key_path)}"
+      puts "📝 File size: #{File.size(auth_key_path)} bytes" if File.exist?(auth_key_path)
+      puts "📝 First 50 chars: #{auth_key_content[0..50]}" if auth_key_content
+    rescue => e
+      UI.user_error!("❌ Failed to create AuthKey.p8 file: #{e.message}")
+    end
     
     # Use gym with automatic signing and direct API key authentication
     gym(
@@ -50,7 +61,7 @@ platform :ios do
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
-      xcargs: "-allowProvisioningUpdates -authenticationKeyPath /tmp/AuthKey_#{ENV['API_KEY_ID']}.p8 -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']}",
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']}",
       export_options: {
         method: "app-store",
         uploadBitcode: false,
