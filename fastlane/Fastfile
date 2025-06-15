@@ -36,34 +36,27 @@ platform :ios do
     )
     puts "✅ API key setup successful"
     
-    puts "📱 Downloading existing certificates and profiles..."
+    puts "🏗️  Building for App Store distribution with automatic signing..."
     
-    # Download existing distribution certificates (don't create new ones)
-    get_certificates(
-      development: false,
-      output_path: "./certs"
-    )
+    # Create AuthKey.p8 file from base64 content for xcodebuild
+    auth_key_content = Base64.decode64(ENV['APP_STORE_CONNECT_API_KEY_CONTENT'])
+    File.write("/tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_ID']}.p8", auth_key_content)
     
-    # Download provisioning profile
-    sigh(
-      app_identifier: "com.othmanshahrouri.cd.starter.project",
-      readonly: true,
-      skip_install: false
-    )
-    
-    puts "🏗️  Building for App Store distribution..."
-    build_app(
+    # Use gym with automatic signing and direct API key authentication
+    gym(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
       export_method: "app-store",
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath /tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_ID']}.p8 -authenticationKeyID #{ENV['APP_STORE_CONNECT_API_KEY_ID']} -authenticationKeyIssuerID #{ENV['APP_STORE_CONNECT_API_ISSUER_ID']}",
       export_options: {
         method: "app-store",
         uploadBitcode: false,
         uploadSymbols: true,
-        compileBitcode: false
+        compileBitcode: false,
+        manageAppVersionAndBuildNumber: false
       }
     )
     puts "✅ Build completed successfully"
