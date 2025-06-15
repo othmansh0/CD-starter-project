@@ -36,7 +36,19 @@ platform :ios do
     )
     puts "✅ API key setup successful"
     
-    puts "📱 Using automatic signing for simplicity..."
+    puts "📱 Setting up signing with cert and sigh..."
+    
+    # Download and install distribution certificate
+    cert(
+      development: false,
+      username: nil  # Use API key instead
+    )
+    
+    # Download provisioning profile
+    sigh(
+      app_identifier: "com.othmanshahrouri.cd.starter.project",
+      readonly: true
+    )
     
     puts "🏗️  Building for App Store distribution..."
     build_app(
@@ -46,7 +58,6 @@ platform :ios do
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
-      xcargs: "-allowProvisioningUpdates",
       export_options: {
         method: "app-store",
         uploadBitcode: false,
