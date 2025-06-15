@@ -36,22 +36,7 @@ platform :ios do
     )
     puts "✅ API key setup successful"
     
-    puts "📜 Downloading certificates..."
-    # Download distribution certificates first
-    get_certificates(
-      development: false,
-      output_path: "./certs"
-    )
-    
-    puts "📱 Downloading provisioning profiles..."
-    # Download existing provisioning profiles (read-only mode for Developer role)
-    sigh(
-      app_identifier: "com.othmanshahrouri.cd.starter.project",
-      readonly: true,
-      skip_install: false,
-      skip_certificate_verification: false
-    )
-    puts "✅ Provisioning profiles downloaded"
+    puts "📱 Using automatic signing for simplicity..."
     
     puts "🏗️  Building for App Store distribution..."
     build_app(
@@ -61,16 +46,12 @@ platform :ios do
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
-      codesigning_identity: "Apple Distribution",
+      xcargs: "-allowProvisioningUpdates",
       export_options: {
         method: "app-store",
         uploadBitcode: false,
         uploadSymbols: true,
-        compileBitcode: false,
-        signingStyle: "manual",
-        provisioningProfiles: {
-          "com.othmanshahrouri.cd.starter.project" => "CD starter project App Store"
-        }
+        compileBitcode: false
       }
     )
     puts "✅ Build completed successfully"
