@@ -52,16 +52,21 @@ struct ContentView: View {
                             resultText = "\(viewModel.multiply(a: a, b: b))"
                         }
                     }
+                    Button("Divide") {
+                        if let a = Double(firstNumber), let b = Double(secondNumber) {
+                            if b != 0 {
+                                resultText = String(format: "%.2f", Double(a) / Double(b))
+                            } else {
+                                resultText = "Cannot divide by zero"
+                            }
+                        }
+                    }
                 }
                 Button("Check Even") {
                     if let n = Int(firstNumber) {
                         resultText = viewModel.isEven(number: n) ? "Even" : "Odd"
                     }
                 }
-                
-                Divider()
-                    .padding(.vertical, 5)
-                
                 Text("Result: \(resultText)")
                     .font(.headline)
                     .foregroundColor(.blue)
