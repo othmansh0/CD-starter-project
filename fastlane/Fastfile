@@ -36,18 +36,19 @@ platform :ios do
     )
     puts "✅ API key setup successful"
     
-    puts "📱 Setting up signing with cert and sigh..."
+    puts "📱 Downloading existing certificates and profiles..."
     
-    # Download and install distribution certificate
-    cert(
+    # Download existing distribution certificates (don't create new ones)
+    get_certificates(
       development: false,
-      username: nil  # Use API key instead
+      output_path: "./certs"
     )
     
     # Download provisioning profile
     sigh(
       app_identifier: "com.othmanshahrouri.cd.starter.project",
-      readonly: true
+      readonly: true,
+      skip_install: false
     )
     
     puts "🏗️  Building for App Store distribution..."
