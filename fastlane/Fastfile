@@ -72,13 +72,15 @@ platform :ios do
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
-      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']}",
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=F62HZKRPDV",
       export_options: {
         method: "app-store",
         uploadBitcode: false,
         uploadSymbols: true,
         compileBitcode: false,
-        manageAppVersionAndBuildNumber: false
+        manageAppVersionAndBuildNumber: false,
+        signingStyle: "automatic",
+        teamID: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
       }
     )
     puts "✅ Build completed successfully"
