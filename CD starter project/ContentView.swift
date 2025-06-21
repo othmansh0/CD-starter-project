@@ -16,6 +16,7 @@ struct ContentView: View {
     
     var body: some View {
         VStack(spacing: 20) {
+            //test
             Text("🔢 Count: \(viewModel.count)")
                 .font(.largeTitle)
                 .fontWeight(.bold)
