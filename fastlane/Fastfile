@@ -332,22 +332,41 @@ platform :ios do
     setup_api_key
     setup_ci_environment
     
-    # Since automatic signing with Developer role API key has permission issues,
-    # we'll use manual signing with explicit provisioning profile mapping
-    UI.message("🔧 Using manual signing with explicit provisioning profile mapping...")
+    # Install base64-encoded provisioning profiles from GitHub secrets
+    UI.message("📱 Installing App Store provisioning profiles from GitHub secrets...")
+    
+    # Install App Store provisioning profile from base64 secret
+    if ENV["APP_STORE_PROFILE_BASE64"]
+      UI.message("📥 Installing App Store provisioning profile...")
+      
+      # Decode and save the provisioning profile
+      profile_path = "/tmp/AppStore_Profile.mobileprovision"
+      sh("echo '#{ENV['APP_STORE_PROFILE_BASE64']}' | base64 --decode > #{profile_path}")
+      
+      # Install the provisioning profile
+      install_provisioning_profile(path: profile_path)
+      
+      UI.success("✅ App Store provisioning profile installed from GitHub secret")
+    else
+      UI.error("❌ APP_STORE_PROFILE_BASE64 environment variable not set")
+      UI.important("💡 Please add your base64-encoded App Store provisioning profile to GitHub secrets")
+      raise "Missing APP_STORE_PROFILE_BASE64 environment variable"
+    end
+    
+    UI.message("🔧 Using manual signing with installed provisioning profiles...")
     
     # Update code signing settings for manual signing
     update_code_signing_settings(
-      use_automatic_signing: false, # Use manual signing to avoid permission issues
+      use_automatic_signing: false, # Use manual signing with installed profiles
       team_id: ENV["DEVELOPMENT_TEAM"],
       targets: ["CD starter project"],
       code_sign_identity: "iPhone Distribution", # Explicit Distribution identity
       profile_name: "" # Will be specified in export options
     )
 
-    UI.message("🏗️ Building for App Store with manual signing and explicit profile mapping...")
+    UI.message("🏗️ Building for App Store with manual signing and installed profiles...")
     
-    # Build the app with manual signing and explicit provisioning profile mapping
+    # Build the app with manual signing using installed provisioning profiles
     begin
       gym(
         project: "CD starter project.xcodeproj",
@@ -361,9 +380,9 @@ platform :ios do
         codesigning_identity: "iPhone Distribution",
         export_options: {
           method: "app-store",
-          signingStyle: "manual", # Manual signing to avoid API key permission issues
+          signingStyle: "manual", # Manual signing with installed profiles
           teamID: ENV["DEVELOPMENT_TEAM"],
-          # Explicit provisioning profile mapping - use the profiles we know exist
+          # Explicit provisioning profile mapping - use the installed profile
           provisioningProfiles: {
             "com.othmanshahrouri.cd.starter.project" => "CD Starter Project App Store"
           },
@@ -386,8 +405,8 @@ platform :ios do
       
     rescue => ex
       UI.error("❌ Build failed: #{ex}")
-      UI.important("💡 Manual signing with explicit profile mapping failed")
-      UI.important("🔧 This suggests the Distribution certificate or provisioning profile is not accessible")
+      UI.important("💡 Manual signing with installed profiles failed")
+      UI.important("🔧 Check that the provisioning profile name matches exactly")
       
       # Try alternative profile name if the first one fails
       UI.message("🔄 Trying alternative provisioning profile name...")
@@ -428,8 +447,8 @@ platform :ios do
         
       rescue => ex2
         UI.error("❌ Both provisioning profile attempts failed")
-        UI.important("💡 This confirms that the Distribution certificates are not accessible with your API key permissions")
-        UI.important("🔧 You need Admin or App Store Manager role to access Distribution certificates in CI")
+        UI.important("💡 Check the provisioning profile is correctly installed and named")
+        UI.important("🔧 Verify the base64 encoding and GitHub secret configuration")
         raise ex2
       end
     end
