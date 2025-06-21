@@ -48,22 +48,30 @@ platform :ios do
       UI.user_error!("❌ Failed to create AuthKey.p8 file: #{e.message}")
     end
 
-    # NOTE: We rely completely on Xcode Cloud signing via API key. No sigh/cert/match needed.
     gym(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
-      export_method: "development",
+      export_method: "app-store",
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
       xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=F62HZKRPDV",
       export_options: {
-        method: "development",
+        method: "app-store",
         signingStyle: "automatic",
         teamID: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
       }
     )
-    puts "✅ Development build completed successfully (pipeline verified)"
-    puts "ℹ️  When ASC permissions are upgraded, set export_method to 'app-store' and re-enable TestFlight upload."
+    puts "✅ Archive completed successfully"
+    
+    puts "🚀 Uploading to TestFlight..."
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      distribute_external: false,
+      notify_external_testers: false,
+      changelog: "Automated build from CI"
+    )
+    puts "✅ Upload to TestFlight completed"
   end
 end 
