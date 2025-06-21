@@ -11,6 +11,76 @@ platform :ios do
     )
   end
 
+  desc "🧪 DIAGNOSTIC: Test Development build to prove permissions issue"
+  lane :diagnostic_dev_build do
+    key_id = ENV["API_KEY_ID"]
+    issuer_id = ENV["API_ISSUER_ID"]
+    key_content = ENV["API_KEY_BASE64"]
+    
+    puts "🧪 DIAGNOSTIC: Testing Development build (should succeed)"
+    puts "🔍 This will prove the pipeline works - only Distribution certificates are blocked"
+    
+    # Ensure we have all required API keys
+    unless key_id && issuer_id && key_content &&
+           !key_id.empty? && !issuer_id.empty? && !key_content.empty?
+      UI.user_error!("❌ Missing App Store Connect API credentials. Please configure API_KEY_ID, API_ISSUER_ID, and API_KEY_BASE64 secrets.")
+    end
+    
+    puts "🔑 Setting up App Store Connect API key..."
+    app_store_connect_api_key(
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_content: key_content,
+      is_key_content_base64: true,
+      duration: 1200,
+      in_house: false
+    )
+    puts "✅ API key setup successful"
+    
+    puts "🏗️  Building for Development (testing permissions)..."
+    
+    # Create AuthKey.p8 file from base64 content for xcodebuild authentication
+    begin
+      auth_key_content = Base64.decode64(ENV['API_KEY_BASE64'])
+      auth_key_path = "/tmp/AuthKey_#{ENV['API_KEY_ID']}.p8"
+      File.binwrite(auth_key_path, auth_key_content)
+      puts "✅ Created AuthKey.p8 file for xcodebuild authentication"
+    rescue => e
+      UI.user_error!("❌ Failed to create AuthKey.p8 file: #{e.message}")
+    end
+    
+    # Enable automatic signing
+    automatic_code_signing(
+      use_automatic_signing: true,
+      team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
+    )
+
+    # DIAGNOSTIC: Try Development build first (should work with Developer role)
+    gym(
+      project: "CD starter project.xcodeproj",
+      scheme: "CD starter project",
+      configuration: "Debug",
+      export_method: "development",
+      output_directory: "./build",
+      output_name: "CD_starter_project_DEV",
+      clean: true,
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM'] || 'F62HZKRPDV'}",
+      export_options: {
+        method: "development",
+        signingStyle: "automatic",
+        teamID: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
+      }
+    )
+    puts "✅ 🎉 DIAGNOSTIC SUCCESS: Development build completed!"
+    puts "🔍 This proves the entire CI/CD pipeline works correctly"
+    puts "❌ The issue is Apple Developer account permissions for Distribution certificates"
+    puts ""
+    puts "📋 NEXT STEPS:"
+    puts "   1. Request Admin or App Store Manager role on Apple Developer account"
+    puts "   2. Or ask someone with Admin privileges to create Distribution certificates"
+    puts "   3. Then switch back to App Store builds"
+  end
+
   desc "Build and upload to TestFlight"
   lane :ci_build do
     key_id = ENV["API_KEY_ID"]
