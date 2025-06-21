@@ -1,311 +1,222 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
 default_platform(:ios)
 
 platform :ios do
-  desc "Run tests"
-  lane :test do
-    run_tests(
-      project: "CD starter project.xcodeproj",
-      scheme: "CD starter project",
-      device: "iPhone 16",
-      only_testing: ["CD starter projectTests"]
-    )
-  end
-
-  desc "🔧 SETUP: Create missing provisioning profiles"
-  lane :setup_profiles do
-    key_id = ENV["API_KEY_ID"]
-    issuer_id = ENV["API_ISSUER_ID"]
-    key_content = ENV["API_KEY_BASE64"]
-    
-    puts "🔧 SETUP: Creating missing provisioning profiles"
-    puts "📋 This will create the App Store and Development profiles needed for builds"
-    
-    # Ensure we have all required API keys
-    unless key_id && issuer_id && key_content &&
-           !key_id.empty? && !issuer_id.empty? && !key_content.empty?
-      UI.user_error!("❌ Missing App Store Connect API credentials. Please configure API_KEY_ID, API_ISSUER_ID, and API_KEY_BASE64 secrets.")
-    end
-    
-    puts "🔑 Setting up App Store Connect API key..."
+  desc "🔑 Setting up App Store Connect API key..."
+  private_lane :setup_api_key do
     app_store_connect_api_key(
-      key_id: key_id,
-      issuer_id: issuer_id,
-      key_content: key_content,
+      key_id: ENV["API_KEY_ID"],
+      issuer_id: ENV["API_ISSUER_ID"],
+      key_content: ENV["API_KEY_BASE64"],
       is_key_content_base64: true,
       duration: 1200,
       in_house: false
     )
-    puts "✅ API key setup successful"
+    UI.success("✅ API key setup successful")
+  end
+
+  desc "🔧 Setup CI environment with proper keychain and certificates"
+  private_lane :setup_ci_environment do
+    # Create a temporary keychain for CI
+    create_keychain(
+      name: "fastlane_tmp_keychain",
+      password: "temp_password",
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false
+    )
     
-    bundle_id = "com.othmanshahrouri.cd.starter.project"
-    team_id = ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
+    # Import Apple WWDR certificates to avoid signing issues
+    import_certificate(
+      certificate_path: "https://developer.apple.com/certificationauthority/AppleWWDRCAG3.cer",
+      keychain_name: "fastlane_tmp_keychain",
+      keychain_password: "temp_password"
+    )
     
-    puts "🏗️  Creating provisioning profiles for #{bundle_id}..."
+    UI.success("✅ CI environment setup complete")
+  end
+
+  desc "📱 Create Development certificate if needed"
+  private_lane :ensure_development_certificate do
+    api_key = lane_context[SharedValues::APP_STORE_CONNECT_API_KEY]
     
     begin
-      puts "📱 Creating Development provisioning profile..."
-      # Create Development profile
-      get_provisioning_profile(
-        app_identifier: bundle_id,
+      # Try to get existing development certificate
+      cert(
         development: true,
-        force: true,
-        team_id: team_id,
-        filename: "Development_#{bundle_id}.mobileprovision"
+        username: ENV["APPLE_ID"] || "your_apple_id@example.com",
+        team_id: ENV["DEVELOPMENT_TEAM"],
+        api_key: api_key,
+        keychain_name: "fastlane_tmp_keychain",
+        keychain_password: "temp_password"
       )
-      puts "✅ Development profile created successfully"
-    rescue => e
-      puts "⚠️  Development profile creation failed: #{e.message}"
+      UI.success("✅ Development certificate ready")
+    rescue => ex
+      UI.error("⚠️ Could not create development certificate: #{ex}")
+      UI.important("🔍 This is expected in CI - will use cloud signing")
     end
-    
-    begin
-      puts "🏪 Creating App Store provisioning profile..."
-      # Create App Store profile  
-      get_provisioning_profile(
-        app_identifier: bundle_id,
-        adhoc: false,
-        development: false,
-        force: true,
-        team_id: team_id,
-        filename: "AppStore_#{bundle_id}.mobileprovision"
-      )
-      puts "✅ App Store profile created successfully"
-    rescue => e
-      puts "⚠️  App Store profile creation failed: #{e.message}"
-    end
-    
-    puts ""
-    puts "🎯 SETUP COMPLETE"
-    puts "📋 Provisioning profiles have been created. Now try building again!"
-    puts "💡 Use /build to test App Store build or /diagnostic to test Development build"
   end
 
-  desc "🔍 DIAGNOSTIC: Test API key permissions (no build)"
+  desc "🧪 DIAGNOSTIC: Test API permissions"
   lane :diagnostic_api_permissions do
-    key_id = ENV["API_KEY_ID"]
-    issuer_id = ENV["API_ISSUER_ID"]
-    key_content = ENV["API_KEY_BASE64"]
+    UI.header("🧪 DIAGNOSTIC: Testing API permissions")
     
-    puts "🔍 DIAGNOSTIC: Testing API key permissions (no build required)"
-    puts "📋 This will test if your API key can access certificates and profiles"
-    
-    # Ensure we have all required API keys
-    unless key_id && issuer_id && key_content &&
-           !key_id.empty? && !issuer_id.empty? && !key_content.empty?
-      UI.user_error!("❌ Missing App Store Connect API credentials. Please configure API_KEY_ID, API_ISSUER_ID, and API_KEY_BASE64 secrets.")
-    end
-    
-    puts "🔑 Setting up App Store Connect API key..."
-    app_store_connect_api_key(
-      key_id: key_id,
-      issuer_id: issuer_id,
-      key_content: key_content,
-      is_key_content_base64: true,
-      duration: 1200,
-      in_house: false
-    )
-    puts "✅ API key setup successful"
-    
-    puts "🔍 Testing API key permissions..."
+    setup_api_key
+    api_key = lane_context[SharedValues::APP_STORE_CONNECT_API_KEY]
     
     begin
-      puts "📱 Testing: Can list apps..."
-      # This should work with basic API key
-      apps = Spaceship::ConnectAPI::App.all
-      puts "✅ SUCCESS: Can list apps (#{apps.count} apps found)"
-    rescue => e
-      puts "❌ FAILED: Cannot list apps - #{e.message}"
-      UI.user_error!("API key lacks basic App Store Connect permissions")
-    end
-    
-    begin
-      puts "🔐 Testing: Can list certificates..."
-      # This tests certificate management permissions
-      certs = Spaceship::ConnectAPI::Certificate.all
-      puts "✅ SUCCESS: Can list certificates (#{certs.count} certificates found)"
+      # Test listing apps
+      apps = Spaceship::ConnectAPI::App.all(limit: 10)
+      UI.success("✅ Can list apps: #{apps.count} apps found")
       
-      # List certificate types
-      certs.each do |cert|
-        puts "   - #{cert.certificate_type}: #{cert.name || 'Unnamed'}"
-      end
-    rescue => e
-      puts "❌ FAILED: Cannot list certificates - #{e.message}"
-      puts "⚠️  This indicates your API key lacks certificate management permissions"
-    end
-    
-    begin
-      puts "📋 Testing: Can list provisioning profiles..."
-      # This tests provisioning profile management permissions
-      profiles = Spaceship::ConnectAPI::Profile.all
-      puts "✅ SUCCESS: Can list provisioning profiles (#{profiles.count} profiles found)"
+      # Test listing certificates  
+      certs = Spaceship::ConnectAPI::Certificate.all(limit: 10)
+      UI.success("✅ Can list certificates: #{certs.count} certificates found")
       
-      # List profiles for our bundle ID
-      matching_profiles = profiles.select { |p| p.bundle_id&.identifier == "com.othmanshahrouri.cd.starter.project" }
-      puts "   - Found #{matching_profiles.count} profiles for com.othmanshahrouri.cd.starter.project"
-      matching_profiles.each do |profile|
-        puts "     * #{profile.profile_type}: #{profile.name} (#{profile.profile_state})"
+      # Test listing profiles
+      profiles = Spaceship::ConnectAPI::Profile.all(limit: 10)
+      UI.success("✅ Can list provisioning profiles: #{profiles.count} profiles found")
+      
+      # Test app-specific profiles
+      app_profiles = profiles.select { |p| p.bundle_id && p.bundle_id.identifier == "com.othmanshahrouri.cd.starter.project" }
+      UI.message("📱 Profiles for bundle ID: #{app_profiles.count} found")
+      
+      if app_profiles.count == 0
+        UI.important("⚠️ No provisioning profiles found for com.othmanshahrouri.cd.starter.project")
+        UI.important("💡 This is likely the root cause - profiles need to be created")
       end
-    rescue => e
-      puts "❌ FAILED: Cannot list provisioning profiles - #{e.message}"
-      puts "⚠️  This indicates your API key lacks provisioning profile management permissions"
+      
+    rescue => ex
+      UI.error("❌ API permissions test failed: #{ex}")
+      raise ex
     end
-    
-    puts ""
-    puts "🎯 DIAGNOSIS COMPLETE"
-    puts "📋 If certificate or profile listing failed, your API key needs additional permissions:"
-    puts "   1. Go to App Store Connect → Users and Access → Keys"
-    puts "   2. Edit your API key"
-    puts "   3. Ensure it has 'Developer' role or higher"
-    puts "   4. Ensure access to 'Certificates, Identifiers & Profiles'"
-    puts ""
-    puts "💡 The build failures are because Xcode can't create/access certificates with current API key permissions"
   end
 
-  desc "🧪 DIAGNOSTIC: Test Development build to prove permissions issue"
+  desc "🏗️ DIAGNOSTIC: Test Development build (should succeed)"
   lane :diagnostic_dev_build do
-    key_id = ENV["API_KEY_ID"]
-    issuer_id = ENV["API_ISSUER_ID"]
-    key_content = ENV["API_KEY_BASE64"]
+    UI.header("🧪 DIAGNOSTIC: Testing Development build (should succeed)")
+    UI.message("🔍 This will prove the pipeline works - only Distribution certificates are blocked")
     
-    puts "🧪 DIAGNOSTIC: Testing Development build (should succeed)"
-    puts "🔍 This will prove the pipeline works - only Distribution certificates are blocked"
+    setup_api_key
+    setup_ci_environment
     
-    # Ensure we have all required API keys
-    unless key_id && issuer_id && key_content &&
-           !key_id.empty? && !issuer_id.empty? && !key_content.empty?
-      UI.user_error!("❌ Missing App Store Connect API credentials. Please configure API_KEY_ID, API_ISSUER_ID, and API_KEY_BASE64 secrets.")
-    end
-    
-    puts "🔑 Setting up App Store Connect API key..."
-    app_store_connect_api_key(
-      key_id: key_id,
-      issuer_id: issuer_id,
-      key_content: key_content,
-      is_key_content_base64: true,
-      duration: 1200,
-      in_house: false
-    )
-    puts "✅ API key setup successful"
-    
-    puts "🏗️  Building for Development (testing permissions)..."
-    
-    # Create AuthKey.p8 file from base64 content for xcodebuild authentication
-    begin
-      auth_key_content = Base64.decode64(ENV['API_KEY_BASE64'])
-      auth_key_path = "/tmp/AuthKey_#{ENV['API_KEY_ID']}.p8"
-      File.binwrite(auth_key_path, auth_key_content)
-      puts "✅ Created AuthKey.p8 file for xcodebuild authentication"
-    rescue => e
-      UI.user_error!("❌ Failed to create AuthKey.p8 file: #{e.message}")
-    end
-    
-    # Enable automatic signing
-    automatic_code_signing(
+    # Enable automatic signing for development
+    update_code_signing_settings(
       use_automatic_signing: true,
-      team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
+      team_id: ENV["DEVELOPMENT_TEAM"],
+      targets: ["CD starter project"],
+      code_sign_identity: "", # Let Xcode choose
+      profile_name: "" # Let Xcode choose
     )
-
-    # Download/create Development provisioning profile explicitly
-    puts "📱 Ensuring Development provisioning profile exists..."
+    
+    UI.message("🏗️ Building for Development (testing permissions)...")
+    
     begin
+      gym(
+        project: "CD starter project.xcodeproj",
+        scheme: "CD starter project",
+        configuration: "Debug",
+        export_method: "development",
+        output_directory: "./build",
+        output_name: "CD_starter_project_DEV",
+        clean: true,
+        xcargs: "-allowProvisioningUpdates -authenticationKeyPath /tmp/AuthKey_#{ENV['API_KEY_ID']}.p8 -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM']}",
+        export_options: {
+          method: "development",
+          signingStyle: "automatic",
+          teamID: ENV["DEVELOPMENT_TEAM"]
+        }
+      )
+      UI.success("🎉 Development build succeeded!")
+      UI.message("💡 This proves your CI setup works - the issue is only with Distribution signing")
+    rescue => ex
+      UI.error("❌ Development build failed: #{ex}")
+      raise ex
+    end
+  end
+
+  desc "⚙️ Setup lane: Create missing provisioning profiles"
+  lane :setup_profiles do
+    UI.header("⚙️ Creating missing provisioning profiles")
+    
+    setup_api_key
+    api_key = lane_context[SharedValues::APP_STORE_CONNECT_API_KEY]
+    
+    begin
+      # Create Development profile
+      UI.message("📱 Creating Development provisioning profile...")
       get_provisioning_profile(
         app_identifier: "com.othmanshahrouri.cd.starter.project",
+        api_key: api_key,
         development: true,
         force: true,
-        team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV",
         filename: "Development_Profile.mobileprovision"
       )
-      puts "✅ Development profile downloaded/created successfully"
-    rescue => e
-      puts "⚠️  Development profile creation failed: #{e.message}"
-      puts "🔍 Continuing with build - xcodebuild may create profile automatically"
-    end
-
-    # DIAGNOSTIC: Try Development build first (should work with Developer role)
-    gym(
-      project: "CD starter project.xcodeproj",
-      scheme: "CD starter project",
-      configuration: "Debug",
-      export_method: "development",
-      output_directory: "./build",
-      output_name: "CD_starter_project_DEV",
-      clean: true,
-      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM'] || 'F62HZKRPDV'}",
-      export_options: {
-        method: "development",
-        signingStyle: "automatic",
-        teamID: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
-      }
-    )
-    puts "✅ 🎉 DIAGNOSTIC SUCCESS: Development build completed!"
-    puts "🔍 This proves the entire CI/CD pipeline works correctly"
-    puts "❌ The issue is Apple Developer account permissions for Distribution certificates"
-    puts ""
-    puts "📋 NEXT STEPS:"
-    puts "   1. Request Admin or App Store Manager role on Apple Developer account"
-    puts "   2. Or ask someone with Admin privileges to create Distribution certificates"
-    puts "   3. Then switch back to App Store builds"
-  end
-
-  desc "Build and upload to TestFlight"
-  lane :ci_build do
-    key_id = ENV["API_KEY_ID"]
-    issuer_id = ENV["API_ISSUER_ID"]
-    key_content = ENV["API_KEY_BASE64"]
-    
-    puts "🔍 Starting ci_build lane for TestFlight upload"
-    
-    # Ensure we have all required API keys
-    unless key_id && issuer_id && key_content &&
-           !key_id.empty? && !issuer_id.empty? && !key_content.empty?
-      UI.user_error!("❌ Missing App Store Connect API credentials. Please configure API_KEY_ID, API_ISSUER_ID, and API_KEY_BASE64 secrets.")
-    end
-    
-    puts "🔑 Setting up App Store Connect API key..."
-    app_store_connect_api_key(
-      key_id: key_id,
-      issuer_id: issuer_id,
-      key_content: key_content,
-      is_key_content_base64: true,
-      duration: 1200,
-      in_house: false
-    )
-    puts "✅ API key setup successful"
-    
-    puts "🏗️  Building for App Store distribution..."
-    
-    # Create AuthKey.p8 file from base64 content for xcodebuild authentication
-    begin
-      auth_key_content = Base64.decode64(ENV['API_KEY_BASE64'])
-      auth_key_path = "/tmp/AuthKey_#{ENV['API_KEY_ID']}.p8"
-      File.binwrite(auth_key_path, auth_key_content)
-      puts "✅ Created AuthKey.p8 file for xcodebuild authentication"
-    rescue => e
-      UI.user_error!("❌ Failed to create AuthKey.p8 file: #{e.message}")
-    end
-    
-    # Enable automatic signing - let Xcode handle everything
-    automatic_code_signing(
-      use_automatic_signing: true,
-      team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
-    )
-
-    # Download/create App Store provisioning profile explicitly
-    puts "🏪 Ensuring App Store provisioning profile exists..."
-    begin
+      UI.success("✅ Development profile created")
+      
+      # Create App Store profile  
+      UI.message("📱 Creating App Store provisioning profile...")
       get_provisioning_profile(
         app_identifier: "com.othmanshahrouri.cd.starter.project",
+        api_key: api_key,
         adhoc: false,
         development: false,
         force: true,
-        team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV",
         filename: "AppStore_Profile.mobileprovision"
       )
-      puts "✅ App Store profile downloaded/created successfully"
-    rescue => e
-      puts "⚠️  App Store profile creation failed: #{e.message}"
-      puts "🔍 Continuing with build - xcodebuild may create profile automatically"
+      UI.success("✅ App Store profile created")
+      
+    rescue => ex
+      UI.error("❌ Profile creation failed: #{ex}")
+      UI.important("💡 This might be due to missing certificates or insufficient permissions")
+      raise ex
     end
+  end
 
+  desc "🚀 Build and upload to TestFlight"
+  lane :build_and_upload do
+    setup_api_key
+    setup_ci_environment
+    
+    # Ensure we have a development certificate for building
+    ensure_development_certificate
+    
+    # Download provisioning profiles
+    UI.message("📱 Downloading provisioning profiles...")
+    get_provisioning_profile(
+      app_identifier: "com.othmanshahrouri.cd.starter.project",
+      api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
+      adhoc: false,
+      development: false,
+      force: true,
+      filename: "AppStore_Profile.mobileprovision"
+    )
+    
+    # Update code signing settings
+    update_code_signing_settings(
+      use_automatic_signing: true,
+      team_id: ENV["DEVELOPMENT_TEAM"],
+      targets: ["CD starter project"],
+      code_sign_identity: "", # Let Xcode choose
+      profile_name: "" # Let Xcode choose
+    )
+
+    # Build the app
     gym(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
@@ -314,30 +225,21 @@ platform :ios do
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
-      # Pass API key credentials to xcodebuild for automatic certificate/profile management
-      # Add DEVELOPMENT_TEAM to ensure proper team context
-      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM'] || 'F62HZKRPDV'}",
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath /tmp/AuthKey_#{ENV['API_KEY_ID']}.p8 -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM']}",
       export_options: {
         method: "app-store",
         signingStyle: "automatic",
-        teamID: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV",
-        # Explicitly specify we want Distribution certificate for App Store
-        signingCertificate: "Apple Distribution",
-        compileBitcode: false,
-        uploadBitcode: false,
-        uploadSymbols: true
+        teamID: ENV["DEVELOPMENT_TEAM"]
       }
     )
-    puts "✅ Archive completed successfully"
-    
-    puts "🚀 Uploading to TestFlight..."
+
+    # Upload to TestFlight
     upload_to_testflight(
-      skip_waiting_for_build_processing: true,
+      api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
       skip_submission: true,
-      distribute_external: false,
-      notify_external_testers: false,
-      changelog: "Automated build from CI"
+      skip_waiting_for_build_processing: true
     )
-    puts "✅ Upload to TestFlight completed"
+    
+    UI.success("🎉 Successfully uploaded to TestFlight!")
   end
 end 

@@ -44,7 +44,7 @@ jobs:
             echo "description=🧪 Diagnostic Development build" >> $GITHUB_OUTPUT
           else
             echo "type=regular" >> $GITHUB_OUTPUT
-            echo "lane=ci_build" >> $GITHUB_OUTPUT
+            echo "lane=build_and_upload" >> $GITHUB_OUTPUT
             echo "description=🚀 App Store build" >> $GITHUB_OUTPUT
           fi
 
@@ -182,11 +182,18 @@ jobs:
           API_ISSUER_ID: ${{ secrets.API_ISSUER_ID }}
           API_KEY_BASE64: ${{ secrets.API_KEY_BASE64 }}
 
+      - name: Create AuthKey.p8 file for Xcode authentication
+        run: |
+          echo "${{ secrets.API_KEY_BASE64 }}" | base64 --decode > /tmp/AuthKey_${{ secrets.API_KEY_ID }}.p8
+          chmod 600 /tmp/AuthKey_${{ secrets.API_KEY_ID }}.p8
+
       - name: Run Fastlane Build
         env:
           API_KEY_ID: ${{ secrets.API_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.API_ISSUER_ID }}
           API_KEY_BASE64: ${{ secrets.API_KEY_BASE64 }}
+          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
         run: bundle exec fastlane ${{ steps.build_type.outputs.lane }}
 
       - name: Announce success
