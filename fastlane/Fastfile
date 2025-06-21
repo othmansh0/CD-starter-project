@@ -41,9 +41,19 @@ platform :ios do
       lock_when_sleeps: false
     )
     
-    # Import Apple WWDR certificates to avoid signing issues
+    # Download and import Apple WWDR certificates to avoid signing issues
+    UI.message("📥 Downloading Apple WWDR certificates...")
+    sh("curl -o /tmp/AppleWWDRCAG3.cer https://developer.apple.com/certificationauthority/AppleWWDRCAG3.cer")
     import_certificate(
-      certificate_path: "https://developer.apple.com/certificationauthority/AppleWWDRCAG3.cer",
+      certificate_path: "/tmp/AppleWWDRCAG3.cer",
+      keychain_name: "fastlane_tmp_keychain",
+      keychain_password: "temp_password"
+    )
+    
+    # Also import the newer G4 certificate for better compatibility
+    sh("curl -o /tmp/AppleWWDRCAG4.cer https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer")
+    import_certificate(
+      certificate_path: "/tmp/AppleWWDRCAG4.cer",
       keychain_name: "fastlane_tmp_keychain",
       keychain_password: "temp_password"
     )
