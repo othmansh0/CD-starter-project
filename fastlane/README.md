@@ -15,21 +15,45 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## iOS
 
-### ios test
+### ios diagnostic_api_permissions
 
 ```sh
-[bundle exec] fastlane ios test
+[bundle exec] fastlane ios diagnostic_api_permissions
 ```
 
-Run tests
+🧪 DIAGNOSTIC: Test API permissions
 
-### ios ci_build
+### ios diagnostic_dev_build
 
 ```sh
-[bundle exec] fastlane ios ci_build
+[bundle exec] fastlane ios diagnostic_dev_build
 ```
 
-Build and upload to TestFlight
+🏗️ DIAGNOSTIC: Test Development build (should succeed)
+
+### ios setup_profiles
+
+```sh
+[bundle exec] fastlane ios setup_profiles
+```
+
+⚙️ Setup lane: Create missing provisioning profiles
+
+### ios build_and_upload
+
+```sh
+[bundle exec] fastlane ios build_and_upload
+```
+
+🚀 Build and upload to TestFlight
+
+### ios test_local_setup
+
+```sh
+[bundle exec] fastlane ios test_local_setup
+```
+
+🧪 LOCAL TEST: Test certificate import without API keys
 
 ----
 
