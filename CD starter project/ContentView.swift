@@ -16,7 +16,6 @@ struct ContentView: View {
     
     var body: some View {
         VStack(spacing: 20) {
-            // Counter section with increment and reset functionality
             Text("🔢 Count: \(viewModel.count)")
                 .font(.largeTitle)
                 .fontWeight(.bold)

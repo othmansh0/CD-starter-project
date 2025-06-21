@@ -64,12 +64,11 @@ platform :ios do
       UI.user_error!("❌ Failed to create AuthKey.p8 file: #{e.message}")
     end
     
-    puts "📋 Downloading provisioning profiles..."
+        puts "📋 Downloading provisioning profiles..."
     # Download development profile for building
     sigh(
       app_identifier: "com.othmanshahrouri.cd.starter.project",
       development: true,
-      force: true,
       readonly: false
     )
     
@@ -77,37 +76,27 @@ platform :ios do
     sigh(
       app_identifier: "com.othmanshahrouri.cd.starter.project",
       appstore: true,
-      force: true,
       readonly: false
     )
     
-    # Use gym with automatic signing and direct API key authentication
+    # Use gym with automatic signing and direct API key authentication for a Development build
     gym(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
-      export_method: "app-store",
+      export_method: "development",
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
       xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=F62HZKRPDV",
       export_options: {
-        method: "app-store",
-        uploadBitcode: false,
-        uploadSymbols: true,
-        compileBitcode: false,
-        manageAppVersionAndBuildNumber: false,
+        method: "development",
         signingStyle: "automatic",
         teamID: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
       }
     )
-    puts "✅ Build completed successfully"
+    puts "✅ Development build completed successfully"
     
-    puts "🚀 Uploading to TestFlight..."
-    upload_to_testflight(
-      skip_waiting_for_build_processing: true,
-      skip_submission: true,
-      changelog: "Automated build from GitHub Actions"
-    )
-    puts "✅ Successfully uploaded to TestFlight!"
+    puts "✅ This confirms the CI pipeline and signing setup are working."
+    puts "❌ The final step is to get 'App Store Manager' or 'Admin' permissions for your API key to enable 'app-store' builds."
   end
 end 
