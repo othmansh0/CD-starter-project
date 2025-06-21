@@ -72,7 +72,7 @@ platform :ios do
         username: ENV["APPLE_ID"] || "your_apple_id@example.com",
         team_id: ENV["DEVELOPMENT_TEAM"],
         api_key: api_key,
-        keychain_name: "fastlane_tmp_keychain",
+        keychain_path: "~/Library/Keychains/fastlane_tmp_keychain",
         keychain_password: "temp_password"
       )
       UI.success("✅ Development certificate ready")
@@ -184,8 +184,6 @@ platform :ios do
       get_provisioning_profile(
         app_identifier: "com.othmanshahrouri.cd.starter.project",
         api_key: api_key,
-        adhoc: false,
-        development: false,
         force: true,
         filename: "AppStore_Profile.mobileprovision"
       )
@@ -211,8 +209,6 @@ platform :ios do
     get_provisioning_profile(
       app_identifier: "com.othmanshahrouri.cd.starter.project",
       api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
-      adhoc: false,
-      development: false,
       force: true,
       filename: "AppStore_Profile.mobileprovision"
     )
