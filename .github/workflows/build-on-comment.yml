@@ -198,6 +198,8 @@ jobs:
           API_KEY_BASE64: ${{ secrets.API_KEY_BASE64 }}
           DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
+          DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
+          DISTRIBUTION_PASSWORD: ${{ secrets.DISTRIBUTION_PASSWORD }}
         run: bundle exec fastlane ${{ steps.build_type.outputs.lane }}
 
       - name: Announce success
