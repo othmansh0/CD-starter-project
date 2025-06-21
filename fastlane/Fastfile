@@ -201,19 +201,10 @@ platform :ios do
     setup_api_key
     setup_ci_environment
     
-    # Ensure we have a development certificate for building
-    ensure_development_certificate
+    # Skip manual certificate/profile management - let Xcode handle it all with cloud signing
+    UI.message("🔧 Using Xcode automatic signing with cloud provisioning...")
     
-    # Download provisioning profiles
-    UI.message("📱 Downloading provisioning profiles...")
-    get_provisioning_profile(
-      app_identifier: "com.othmanshahrouri.cd.starter.project",
-      api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
-      force: true,
-      filename: "AppStore_Profile.mobileprovision"
-    )
-    
-    # Update code signing settings
+    # Update code signing settings for automatic signing
     update_code_signing_settings(
       use_automatic_signing: true,
       team_id: ENV["DEVELOPMENT_TEAM"],
@@ -222,31 +213,43 @@ platform :ios do
       profile_name: "" # Let Xcode choose
     )
 
-    # Build the app
-    gym(
-      project: "CD starter project.xcodeproj",
-      scheme: "CD starter project",
-      configuration: "Release",
-      export_method: "app-store",
-      output_directory: "./build",
-      output_name: "CD_starter_project",
-      clean: true,
-      xcargs: "-allowProvisioningUpdates -authenticationKeyPath /tmp/AuthKey_#{ENV['API_KEY_ID']}.p8 -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM']}",
-      export_options: {
-        method: "app-store",
-        signingStyle: "automatic",
-        teamID: ENV["DEVELOPMENT_TEAM"]
-      }
-    )
-
-    # Upload to TestFlight
-    upload_to_testflight(
-      api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
-      skip_submission: true,
-      skip_waiting_for_build_processing: true
-    )
+    UI.message("🏗️ Building for App Store with cloud signing...")
     
-    UI.success("🎉 Successfully uploaded to TestFlight!")
+    # Build the app with cloud signing - no manual certificate management
+    begin
+      gym(
+        project: "CD starter project.xcodeproj",
+        scheme: "CD starter project",
+        configuration: "Release",
+        export_method: "app-store",
+        output_directory: "./build",
+        output_name: "CD_starter_project",
+        clean: true,
+        xcargs: "-allowProvisioningUpdates -authenticationKeyPath /tmp/AuthKey_#{ENV['API_KEY_ID']}.p8 -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM']}",
+        export_options: {
+          method: "app-store",
+          signingStyle: "automatic",
+          teamID: ENV["DEVELOPMENT_TEAM"]
+        }
+      )
+      
+      UI.success("🎉 Build completed successfully!")
+      
+      # Upload to TestFlight
+      upload_to_testflight(
+        api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
+        skip_submission: true,
+        skip_waiting_for_build_processing: true
+      )
+      
+      UI.success("🎉 Successfully uploaded to TestFlight!")
+      
+    rescue => ex
+      UI.error("❌ Build failed: #{ex}")
+      UI.important("💡 If this is a certificate/signing error, it's likely due to Apple Developer account permissions")
+      UI.important("🔧 Developer role cannot create Distribution certificates - need Admin or App Store Manager role")
+      raise ex
+    end
   end
 
   desc "🧪 Run unit tests"
