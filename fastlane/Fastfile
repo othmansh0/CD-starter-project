@@ -69,14 +69,14 @@ platform :ios do
     sigh(
       app_identifier: "com.othmanshahrouri.cd.starter.project",
       development: true,
-      force: true
+      readonly: false
     )
     
     # Download app store profile for distribution
     sigh(
       app_identifier: "com.othmanshahrouri.cd.starter.project",
       appstore: true,
-      force: true
+      readonly: false
     )
     
     # Use gym with automatic signing and direct API key authentication
