@@ -5,37 +5,17 @@
     
     
       
-      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.000227">
+      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.000321">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="1: create_keychain" time="0.141162">
+      <testcase classname="fastlane.lanes" name="1: Switch to ios setup_api_key lane" time="6.8e-05">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="2: curl -o /tmp/AppleWWDRCAG3.cer https://developer.apple.com/certificationauthority/AppleWWDRCAG3.cer" time="0.66708">
-        
-      </testcase>
-    
-      
-      <testcase classname="fastlane.lanes" name="3: import_certificate" time="0.043606">
-        
-      </testcase>
-    
-      
-      <testcase classname="fastlane.lanes" name="4: curl -o /tmp/AppleWWDRCAG4.cer https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer" time="0.605868">
-        
-      </testcase>
-    
-      
-      <testcase classname="fastlane.lanes" name="5: import_certificate" time="0.126622">
-        
-      </testcase>
-    
-      
-      <testcase classname="fastlane.lanes" name="6: delete_keychain" time="0.045799">
+      <testcase classname="fastlane.lanes" name="2: app_store_connect_api_key" time="110.427861">
         
       </testcase>
     
