@@ -208,6 +208,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
           DISTRIBUTION_PASSWORD: ${{ secrets.DISTRIBUTION_PASSWORD }}
+          APP_STORE_PROFILE_BASE64: ${{ secrets.APP_STORE_PROFILE_BASE64 }}
         run: bundle exec fastlane ${{ steps.build_type.outputs.lane }}
 
       - name: Announce success
