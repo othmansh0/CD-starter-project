@@ -253,6 +253,16 @@ platform :ios do
     UI.success("🎉 Successfully uploaded to TestFlight!")
   end
 
+  desc "🧪 Run unit tests"
+  lane :test do
+    run_tests(
+      project: "CD starter project.xcodeproj",
+      scheme: "CD starter project",
+      device: "iPhone 16",
+      only_testing: ["CD starter projectTests"]
+    )
+  end
+
   desc "🧪 LOCAL TEST: Test certificate import without API keys"
   lane :test_local_setup do
     UI.header("🧪 LOCAL TEST: Testing certificate import")
