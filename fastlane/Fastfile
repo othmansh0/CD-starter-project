@@ -332,8 +332,9 @@ platform :ios do
     setup_api_key
     setup_ci_environment
     
-    # Skip manual certificate/profile management - let Xcode handle it all with cloud signing
-    UI.message("🔧 Using Xcode automatic signing with cloud provisioning...")
+    # The key insight: Use app-store-connect instead of deprecated app-store method
+    # Also remove -allowProvisioningUpdates which requires higher permissions
+    UI.message("🔧 Using automatic signing with improved cloud provisioning...")
     
     # Update code signing settings for automatic signing
     update_code_signing_settings(
@@ -344,23 +345,27 @@ platform :ios do
       profile_name: "" # Let Xcode choose
     )
 
-    UI.message("🏗️ Building for App Store with cloud signing...")
+    UI.message("🏗️ Building for App Store with enhanced cloud signing...")
     
-    # Build the app with cloud signing - no manual certificate management
+    # Build the app with improved cloud signing approach
     begin
       gym(
         project: "CD starter project.xcodeproj",
         scheme: "CD starter project",
         configuration: "Release",
-        export_method: "app-store",
+        export_method: "app-store-connect", # Use non-deprecated method
         output_directory: "./build",
         output_name: "CD_starter_project",
         clean: true,
-        xcargs: "-allowProvisioningUpdates -authenticationKeyPath /tmp/AuthKey_#{ENV['API_KEY_ID']}.p8 -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM']}",
+        # Remove -allowProvisioningUpdates and use API key for authentication only
+        xcargs: "-authenticationKeyPath /tmp/AuthKey_#{ENV['API_KEY_ID']}.p8 -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM']}",
         export_options: {
-          method: "app-store",
+          method: "app-store-connect", # Use non-deprecated method
           signingStyle: "automatic",
-          teamID: ENV["DEVELOPMENT_TEAM"]
+          teamID: ENV["DEVELOPMENT_TEAM"],
+          uploadBitcode: false, # Bitcode is deprecated
+          uploadSymbols: true,
+          compileBitcode: false
         }
       )
       
