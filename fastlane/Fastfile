@@ -57,16 +57,23 @@ platform :ios do
     gym(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
+      configuration: "Release",
       export_method: "app-store",
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
       # Pass API key credentials to xcodebuild for automatic certificate/profile management
-      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']}",
+      # Add DEVELOPMENT_TEAM to ensure proper team context
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM'] || 'F62HZKRPDV'}",
       export_options: {
         method: "app-store",
         signingStyle: "automatic",
-        teamID: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
+        teamID: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV",
+        # Explicitly specify we want Distribution certificate for App Store
+        signingCertificate: "Apple Distribution",
+        compileBitcode: false,
+        uploadBitcode: false,
+        uploadSymbols: true
       }
     )
     puts "✅ Archive completed successfully"
