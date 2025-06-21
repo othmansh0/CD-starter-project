@@ -203,6 +203,22 @@ platform :ios do
       team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
     )
 
+    # Download/create Development provisioning profile explicitly
+    puts "📱 Ensuring Development provisioning profile exists..."
+    begin
+      get_provisioning_profile(
+        app_identifier: "com.othmanshahrouri.cd.starter.project",
+        type: "development",
+        force: true,
+        team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV",
+        filename: "Development_Profile.mobileprovision"
+      )
+      puts "✅ Development profile downloaded/created successfully"
+    rescue => e
+      puts "⚠️  Development profile creation failed: #{e.message}"
+      puts "🔍 Continuing with build - xcodebuild may create profile automatically"
+    end
+
     # DIAGNOSTIC: Try Development build first (should work with Developer role)
     gym(
       project: "CD starter project.xcodeproj",
@@ -271,6 +287,22 @@ platform :ios do
       use_automatic_signing: true,
       team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
     )
+
+    # Download/create App Store provisioning profile explicitly
+    puts "🏪 Ensuring App Store provisioning profile exists..."
+    begin
+      get_provisioning_profile(
+        app_identifier: "com.othmanshahrouri.cd.starter.project",
+        type: "appstore",
+        force: true,
+        team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV",
+        filename: "AppStore_Profile.mobileprovision"
+      )
+      puts "✅ App Store profile downloaded/created successfully"
+    rescue => e
+      puts "⚠️  App Store profile creation failed: #{e.message}"
+      puts "🔍 Continuing with build - xcodebuild may create profile automatically"
+    end
 
     gym(
       project: "CD starter project.xcodeproj",
