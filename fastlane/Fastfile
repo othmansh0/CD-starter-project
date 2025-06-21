@@ -332,9 +332,27 @@ platform :ios do
     setup_api_key
     setup_ci_environment
     
-    # The key insight: Use app-store-connect instead of deprecated app-store method
-    # Also remove -allowProvisioningUpdates which requires higher permissions
-    UI.message("🔧 Using automatic signing with improved cloud provisioning...")
+    # The key insight: Download existing App Store profiles to make them available locally
+    UI.message("📱 Downloading existing App Store provisioning profiles...")
+    
+    # Download existing App Store provisioning profiles to make them available locally
+    begin
+      # Get existing App Store profile - don't create new, just download existing
+      get_provisioning_profile(
+        app_identifier: "com.othmanshahrouri.cd.starter.project",
+        api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
+        force: false, # Don't create new, use existing
+        skip_install: false, # Install to local machine
+        readonly: true, # Don't modify, just download
+        filename: "AppStore_Profile.mobileprovision"
+      )
+      UI.success("✅ App Store provisioning profile downloaded and installed")
+    rescue => ex
+      UI.error("⚠️ Could not download App Store profile: #{ex}")
+      UI.important("💡 Will continue with automatic signing and hope for the best")
+    end
+    
+    UI.message("🔧 Using automatic signing with downloaded provisioning profiles...")
     
     # Update code signing settings for automatic signing
     update_code_signing_settings(
