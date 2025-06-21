@@ -71,12 +71,13 @@ struct ContentView: View {
                         }
                     }
                     .buttonStyle(.bordered)
-                    Button("🔋 Pow") {
+
+                    Button("Power") {
+
                         if let a = Double(firstNumber), let b = Double(secondNumber) {
                             resultText = String(format: "%.2f", viewModel.power(base: a, exponent: b))
                         }
                     }
-                    .buttonStyle(.bordered)
                 }
                 Button("🔍 Check Even/Odd") {
                     if let n = Int(firstNumber) {
