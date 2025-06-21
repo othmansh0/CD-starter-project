@@ -353,14 +353,14 @@ platform :ios do
         project: "CD starter project.xcodeproj",
         scheme: "CD starter project",
         configuration: "Release",
-        export_method: "app-store-connect", # Use non-deprecated method
+        export_method: "app-store", # Use standard app-store method
         output_directory: "./build",
         output_name: "CD_starter_project",
         clean: true,
-        # Remove -allowProvisioningUpdates and use API key for authentication only
+        # Remove -allowProvisioningUpdates to avoid permission issues
         xcargs: "-authenticationKeyPath /tmp/AuthKey_#{ENV['API_KEY_ID']}.p8 -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']} DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM']}",
         export_options: {
-          method: "app-store-connect", # Use non-deprecated method
+          method: "app-store", # Standard method
           signingStyle: "automatic",
           teamID: ENV["DEVELOPMENT_TEAM"],
           uploadBitcode: false, # Bitcode is deprecated
