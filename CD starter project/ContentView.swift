@@ -17,42 +17,51 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 20) {
             // Counter section with increment and reset functionality
-            Text("Count: \(viewModel.count)")
+            Text("🔢 Count: \(viewModel.count)")
                 .font(.largeTitle)
+                .fontWeight(.bold)
             HStack(spacing: 20) {
-                Button("Increment") {
+                Button("➕ Increment") {
                     viewModel.increment()
                 }
-                Button("Reset") {
+                .buttonStyle(.borderedProminent)
+                Button("🔄 Reset") {
                     viewModel.reset()
                 }
+                .buttonStyle(.bordered)
             }
             Divider()
             // Calculator section with basic arithmetic operations
             VStack(spacing: 10) {
-                TextField("First Number", text: $firstNumber)
+                Text("🧮 Calculator")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                TextField("🔢 First Number", text: $firstNumber)
                     .keyboardType(.numberPad)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                TextField("Second Number", text: $secondNumber)
+                TextField("🔢 Second Number", text: $secondNumber)
                     .keyboardType(.numberPad)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                HStack {
-                    Button("Add") {
+                HStack(spacing: 8) {
+                    Button("➕ Add") {
                         if let a = Int(firstNumber), let b = Int(secondNumber) {
                             resultText = "\(viewModel.add(a: a, b: b))"
                         }
                     }
-                    Button("Subtract") {
+                    .buttonStyle(.bordered)
+                    Button("➖ Sub") {
                         if let a = Int(firstNumber), let b = Int(secondNumber) {
                             resultText = "\(viewModel.subtract(a: a, b: b))"
                         }
                     }
-                    Button("Multiply") {
+                    .buttonStyle(.bordered)
+                    Button("✖️ Mul") {
                         if let a = Int(firstNumber), let b = Int(secondNumber) {
                             resultText = "\(viewModel.multiply(a: a, b: b))"
                         }
                     }
-                    Button("Divide") {
+                    .buttonStyle(.bordered)
+                    Button("➗ Div") {
                         if let a = Double(firstNumber), let b = Double(secondNumber) {
                             if b != 0 {
                                 resultText = String(format: "%.2f", Double(a) / Double(b))
@@ -61,20 +70,24 @@ struct ContentView: View {
                             }
                         }
                     }
-                    Button("Power") {
+                    .buttonStyle(.bordered)
+                    Button("🔋 Pow") {
                         if let a = Double(firstNumber), let b = Double(secondNumber) {
                             resultText = String(format: "%.2f", viewModel.power(base: a, exponent: b))
                         }
                     }
+                    .buttonStyle(.bordered)
                 }
-                Button("Check Even") {
+                Button("🔍 Check Even/Odd") {
                     if let n = Int(firstNumber) {
-                        resultText = viewModel.isEven(number: n) ? "Even" : "Odd"
+                        resultText = viewModel.isEven(number: n) ? "✅ Even" : "❌ Odd"
                     }
                 }
-                Text("Result: \(resultText)")
+                .buttonStyle(.borderedProminent)
+                Text("📊 Result: \(resultText)")
                     .font(.headline)
                     .foregroundColor(.blue)
+                    .padding(.top, 5)
             }.padding()
         }
         .padding()

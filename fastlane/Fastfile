@@ -79,8 +79,12 @@ platform :ios do
         uploadSymbols: true,
         compileBitcode: false,
         manageAppVersionAndBuildNumber: false,
-        signingStyle: "automatic",
-        teamID: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
+        signingStyle: "manual",
+        teamID: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV",
+        signingCertificate: "Apple Distribution",
+        provisioningProfiles: {
+          "com.othmanshahrouri.cd.starter.project" => "CD starter project AppStore"
+        }
       }
     )
     puts "✅ Build completed successfully"
