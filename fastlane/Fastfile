@@ -181,6 +181,69 @@ platform :ios do
     end
   end
 
+  desc "🔍 DIAGNOSTIC: Check available certificates"
+  lane :check_certificates do
+    UI.header("🔍 DIAGNOSTIC: Checking available certificates")
+    
+    setup_api_key
+    api_key = lane_context[SharedValues::APP_STORE_CONNECT_API_KEY]
+    
+    begin
+      # List all certificates
+      certs = Spaceship::ConnectAPI::Certificate.all
+      UI.message("📋 Found #{certs.count} total certificates:")
+      
+      certs.each do |cert|
+        UI.message("  - #{cert.certificate_type}: #{cert.name} (#{cert.id})")
+        UI.message("    Status: #{cert.certificate_content ? 'Active' : 'Inactive'}")
+      end
+      
+      # Check specifically for Distribution certificates
+      distribution_certs = certs.select { |c| c.certificate_type == "IOS_DISTRIBUTION" }
+      UI.message("🏪 Distribution certificates: #{distribution_certs.count}")
+      
+      if distribution_certs.empty?
+        UI.error("❌ No iOS Distribution certificates found!")
+        UI.important("💡 You need to create an iOS Distribution certificate first")
+        UI.important("🔧 Go to Apple Developer Portal > Certificates > Create new iOS Distribution certificate")
+      else
+        UI.success("✅ Found #{distribution_certs.count} Distribution certificate(s)")
+      end
+      
+    rescue => ex
+      UI.error("❌ Certificate check failed: #{ex}")
+      raise ex
+    end
+  end
+
+  desc "⚙️ Setup lane: Create App Store provisioning profile only"
+  lane :setup_app_store_profile do
+    UI.header("⚙️ Creating App Store provisioning profile")
+    
+    setup_api_key
+    api_key = lane_context[SharedValues::APP_STORE_CONNECT_API_KEY]
+    
+    begin
+      # Create App Store profile only (skip Development)
+      UI.message("📱 Creating App Store provisioning profile...")
+      get_provisioning_profile(
+        app_identifier: "com.othmanshahrouri.cd.starter.project",
+        api_key: api_key,
+        adhoc: false,
+        development: false,
+        force: true,
+        filename: "AppStore_Profile.mobileprovision"
+      )
+      UI.success("✅ App Store profile created successfully!")
+      
+    rescue => ex
+      UI.error("❌ App Store profile creation failed: #{ex}")
+      UI.important("💡 This might be due to missing Distribution certificate")
+      UI.important("🔧 Make sure you have a valid iOS Distribution certificate in your Apple Developer account")
+      raise ex
+    end
+  end
+
   desc "⚙️ Setup lane: Create missing provisioning profiles"
   lane :setup_profiles do
     UI.header("⚙️ Creating missing provisioning profiles")

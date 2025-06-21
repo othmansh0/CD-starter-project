@@ -39,6 +39,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ⚙️ Setup lane: Create missing provisioning profiles
 
+### ios test_app_store_build
+
+```sh
+[bundle exec] fastlane ios test_app_store_build
+```
+
+🧪 TEST: App Store build with Development export (to test full pipeline)
+
 ### ios build_and_upload
 
 ```sh
@@ -46,6 +54,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 ```
 
 🚀 Build and upload to TestFlight
+
+### ios test
+
+```sh
+[bundle exec] fastlane ios test
+```
+
+🧪 Run unit tests
 
 ### ios test_local_setup
 
