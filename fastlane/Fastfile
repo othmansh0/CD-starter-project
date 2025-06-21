@@ -11,6 +11,87 @@ platform :ios do
     )
   end
 
+  desc "🔍 DIAGNOSTIC: Test API key permissions (no build)"
+  lane :diagnostic_api_permissions do
+    key_id = ENV["API_KEY_ID"]
+    issuer_id = ENV["API_ISSUER_ID"]
+    key_content = ENV["API_KEY_BASE64"]
+    
+    puts "🔍 DIAGNOSTIC: Testing API key permissions (no build required)"
+    puts "📋 This will test if your API key can access certificates and profiles"
+    
+    # Ensure we have all required API keys
+    unless key_id && issuer_id && key_content &&
+           !key_id.empty? && !issuer_id.empty? && !key_content.empty?
+      UI.user_error!("❌ Missing App Store Connect API credentials. Please configure API_KEY_ID, API_ISSUER_ID, and API_KEY_BASE64 secrets.")
+    end
+    
+    puts "🔑 Setting up App Store Connect API key..."
+    app_store_connect_api_key(
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_content: key_content,
+      is_key_content_base64: true,
+      duration: 1200,
+      in_house: false
+    )
+    puts "✅ API key setup successful"
+    
+    puts "🔍 Testing API key permissions..."
+    
+    begin
+      puts "📱 Testing: Can list apps..."
+      # This should work with basic API key
+      apps = Spaceship::ConnectAPI::App.all
+      puts "✅ SUCCESS: Can list apps (#{apps.count} apps found)"
+    rescue => e
+      puts "❌ FAILED: Cannot list apps - #{e.message}"
+      UI.user_error!("API key lacks basic App Store Connect permissions")
+    end
+    
+    begin
+      puts "🔐 Testing: Can list certificates..."
+      # This tests certificate management permissions
+      certs = Spaceship::ConnectAPI::Certificate.all
+      puts "✅ SUCCESS: Can list certificates (#{certs.count} certificates found)"
+      
+      # List certificate types
+      certs.each do |cert|
+        puts "   - #{cert.certificate_type}: #{cert.name || 'Unnamed'}"
+      end
+    rescue => e
+      puts "❌ FAILED: Cannot list certificates - #{e.message}"
+      puts "⚠️  This indicates your API key lacks certificate management permissions"
+    end
+    
+    begin
+      puts "📋 Testing: Can list provisioning profiles..."
+      # This tests provisioning profile management permissions
+      profiles = Spaceship::ConnectAPI::Profile.all
+      puts "✅ SUCCESS: Can list provisioning profiles (#{profiles.count} profiles found)"
+      
+      # List profiles for our bundle ID
+      matching_profiles = profiles.select { |p| p.bundle_id&.identifier == "com.othmanshahrouri.cd.starter.project" }
+      puts "   - Found #{matching_profiles.count} profiles for com.othmanshahrouri.cd.starter.project"
+      matching_profiles.each do |profile|
+        puts "     * #{profile.profile_type}: #{profile.name} (#{profile.profile_state})"
+      end
+    rescue => e
+      puts "❌ FAILED: Cannot list provisioning profiles - #{e.message}"
+      puts "⚠️  This indicates your API key lacks provisioning profile management permissions"
+    end
+    
+    puts ""
+    puts "🎯 DIAGNOSIS COMPLETE"
+    puts "📋 If certificate or profile listing failed, your API key needs additional permissions:"
+    puts "   1. Go to App Store Connect → Users and Access → Keys"
+    puts "   2. Edit your API key"
+    puts "   3. Ensure it has 'Developer' role or higher"
+    puts "   4. Ensure access to 'Certificates, Identifiers & Profiles'"
+    puts ""
+    puts "💡 The build failures are because Xcode can't create/access certificates with current API key permissions"
+  end
+
   desc "🧪 DIAGNOSTIC: Test Development build to prove permissions issue"
   lane :diagnostic_dev_build do
     key_id = ENV["API_KEY_ID"]

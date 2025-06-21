@@ -24,13 +24,17 @@ jobs:
           echo "Pull request URL: ${{ github.event.issue.pull_request }}"
           
   build-comment:
-    if: github.event.issue.pull_request != null && (contains(github.event.comment.body, '/build') || contains(github.event.comment.body, '/diagnostic'))
+    if: github.event.issue.pull_request != null && (contains(github.event.comment.body, '/build') || contains(github.event.comment.body, '/diagnostic') || contains(github.event.comment.body, '/permissions'))
     runs-on: macos-15
     steps:
       - name: Determine build type
         id: build_type
         run: |
-          if [[ "${{ github.event.comment.body }}" == *"/diagnostic"* ]]; then
+          if [[ "${{ github.event.comment.body }}" == *"/permissions"* ]]; then
+            echo "type=permissions" >> $GITHUB_OUTPUT
+            echo "lane=diagnostic_api_permissions" >> $GITHUB_OUTPUT
+            echo "description=🔍 API Key Permissions Diagnostic" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.comment.body }}" == *"/diagnostic"* ]]; then
             echo "type=diagnostic" >> $GITHUB_OUTPUT
             echo "lane=diagnostic_dev_build" >> $GITHUB_OUTPUT
             echo "description=🧪 Diagnostic Development build" >> $GITHUB_OUTPUT
@@ -44,7 +48,7 @@ jobs:
         run: |
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -X POST \
-            -d '{"body":"${{ steps.build_type.outputs.description }} triggered by comment! Starting build process..."}' \
+            -d '{"body":"${{ steps.build_type.outputs.description }} triggered by comment! Starting process..."}' \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
 
       - name: Get PR info
@@ -75,7 +79,7 @@ jobs:
         id: check_tests
         run: |
           # Skip test check for diagnostic builds
-          if [[ "${{ steps.build_type.outputs.type }}" == "diagnostic" ]]; then
+          if [[ "${{ steps.build_type.outputs.type }}" == "diagnostic" || "${{ steps.build_type.outputs.type }}" == "permissions" ]]; then
             echo "🧪 Diagnostic build - skipping test validation"
             exit 0
           fi
@@ -184,7 +188,12 @@ jobs:
       - name: Announce success
         if: success()
         run: |
-          if [[ "${{ steps.build_type.outputs.type }}" == "diagnostic" ]]; then
+          if [[ "${{ steps.build_type.outputs.type }}" == "permissions" ]]; then
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -X POST \
+              -d '{"body":"✅ 🔍 **API Key Permissions Check Complete!** 🎉\n\nCheck the workflow logs to see which permissions your API key has. This will help identify what needs to be fixed for builds to work."}' \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+          elif [[ "${{ steps.build_type.outputs.type }}" == "diagnostic" ]]; then
             curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -X POST \
               -d '{"body":"✅ 🧪 **DIAGNOSTIC SUCCESS!** Development build completed! 🎉\n\n**This proves:**\n- ✅ CI/CD pipeline works perfectly\n- ✅ API key authentication works\n- ✅ Automatic signing works\n- ❌ **Issue:** Apple Developer account lacks Distribution certificate permissions\n\n**Next Steps:**\n1. Request Admin or App Store Manager role\n2. Or ask Admin to create Distribution certificates\n3. Then use `/build` for App Store builds"}' \
@@ -199,7 +208,12 @@ jobs:
       - name: Announce failure
         if: failure()
         run: |
-          if [[ "${{ steps.build_type.outputs.type }}" == "diagnostic" ]]; then
+          if [[ "${{ steps.build_type.outputs.type }}" == "permissions" ]]; then
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -X POST \
+              -d '{"body":"❌ 🔍 API Key permissions check failed! Check the workflow logs to see what permissions are missing."}' \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+          elif [[ "${{ steps.build_type.outputs.type }}" == "diagnostic" ]]; then
             curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -X POST \
               -d '{"body":"❌ 🧪 Diagnostic build failed! This suggests a deeper configuration issue. Please check the workflow logs."}' \
