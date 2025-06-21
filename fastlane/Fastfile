@@ -336,6 +336,7 @@ platform :ios do
     UI.message("📱 Installing App Store provisioning profiles from GitHub secrets...")
     
     # Install App Store provisioning profile from base64 secret
+    installed_profile_name = nil
     if ENV["APP_STORE_PROFILE_BASE64"]
       UI.message("📥 Installing App Store provisioning profile...")
       
@@ -346,6 +347,16 @@ platform :ios do
       # Install the provisioning profile
       install_provisioning_profile(path: profile_path)
       
+      # Try to extract the profile name from the installed profile
+      begin
+        # Use security command to read the profile name
+        profile_info = sh("security cms -D -i #{profile_path} | grep -A1 'Name' | tail -1 | sed 's/.*<string>\\(.*\\)<\\/string>.*/\\1/'", log: false)
+        installed_profile_name = profile_info.strip if profile_info && !profile_info.strip.empty?
+        UI.message("🔍 Detected profile name: #{installed_profile_name}") if installed_profile_name
+      rescue
+        UI.message("⚠️ Could not detect profile name, using default names")
+      end
+      
       UI.success("✅ App Store provisioning profile installed from GitHub secret")
     else
       UI.error("❌ APP_STORE_PROFILE_BASE64 environment variable not set")
@@ -355,13 +366,17 @@ platform :ios do
     
     UI.message("🔧 Using manual signing with installed provisioning profiles...")
     
+    # Determine the profile name to use
+    profile_name_to_use = installed_profile_name || "CD Starter Project App Store"
+    UI.message("🔧 Using provisioning profile: #{profile_name_to_use}")
+    
     # Update code signing settings for manual signing
     update_code_signing_settings(
       use_automatic_signing: false, # Use manual signing with installed profiles
       team_id: ENV["DEVELOPMENT_TEAM"],
       targets: ["CD starter project"],
       code_sign_identity: "iPhone Distribution", # Explicit Distribution identity
-      profile_name: "" # Will be specified in export options
+      profile_name: profile_name_to_use # Use detected or default profile name
     )
 
     UI.message("🏗️ Building for App Store with manual signing and installed profiles...")
@@ -384,7 +399,7 @@ platform :ios do
           teamID: ENV["DEVELOPMENT_TEAM"],
           # Explicit provisioning profile mapping - use the installed profile
           provisioningProfiles: {
-            "com.othmanshahrouri.cd.starter.project" => "CD Starter Project App Store"
+            "com.othmanshahrouri.cd.starter.project" => profile_name_to_use
           },
           uploadBitcode: false,
           uploadSymbols: true,
@@ -394,64 +409,95 @@ platform :ios do
       
       UI.success("🎉 Build completed successfully!")
       
-      # Upload to TestFlight
-      upload_to_testflight(
-        api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
-        skip_submission: true,
-        skip_waiting_for_build_processing: true
-      )
-      
-      UI.success("🎉 Successfully uploaded to TestFlight!")
-      
     rescue => ex
       UI.error("❌ Build failed: #{ex}")
       UI.important("💡 Manual signing with installed profiles failed")
       UI.important("🔧 Check that the provisioning profile name matches exactly")
       
-      # Try alternative profile name if the first one fails
-      UI.message("🔄 Trying alternative provisioning profile name...")
+      # Try alternative profile names if the first one fails
+      UI.message("🔄 Trying alternative provisioning profile names...")
+      
+      # List installed profiles for debugging
       begin
-        gym(
-          project: "CD starter project.xcodeproj",
-          scheme: "CD starter project",
-          configuration: "Release",
-          export_method: "app-store",
-          output_directory: "./build",
-          output_name: "CD_starter_project",
-          clean: false, # Don't clean again
-          codesigning_identity: "iPhone Distribution",
-          export_options: {
-            method: "app-store",
-            signingStyle: "manual",
-            teamID: ENV["DEVELOPMENT_TEAM"],
-            # Try the other profile name we saw in the logs
-            provisioningProfiles: {
-              "com.othmanshahrouri.cd.starter.project" => "CD starter project App Store"
-            },
-            uploadBitcode: false,
-            uploadSymbols: true,
-            compileBitcode: false
-          }
-        )
+        UI.message("🔍 Listing installed provisioning profiles...")
+        sh("ls -la ~/Library/MobileDevice/Provisioning\\ Profiles/ || echo 'No profiles found in user directory'")
+        sh("find /tmp -name '*.mobileprovision' -exec basename {} \\; || echo 'No profiles found in tmp'")
+      rescue
+        UI.message("⚠️ Could not list provisioning profiles")
+      end
+      
+      # Try common alternative names
+      alternative_names = [
+        "CD starter project App Store",
+        "CD Starter Project App Store", 
+        installed_profile_name
+      ].compact.uniq
+      
+      success = false
+      alternative_names.each_with_index do |alt_name, index|
+        next if alt_name == profile_name_to_use # Skip the one we already tried
         
-        UI.success("🎉 Build completed with alternative profile!")
+        UI.message("🔄 Attempt #{index + 1}: Trying profile name '#{alt_name}'")
         
-        # Upload to TestFlight
-        upload_to_testflight(
-          api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
-          skip_submission: true,
-          skip_waiting_for_build_processing: true
-        )
-        
-        UI.success("🎉 Successfully uploaded to TestFlight!")
-        
-      rescue => ex2
-        UI.error("❌ Both provisioning profile attempts failed")
+        begin
+          # Update project settings with new profile name
+          update_code_signing_settings(
+            use_automatic_signing: false,
+            team_id: ENV["DEVELOPMENT_TEAM"],
+            targets: ["CD starter project"],
+            code_sign_identity: "iPhone Distribution",
+            profile_name: alt_name
+          )
+          
+          gym(
+            project: "CD starter project.xcodeproj",
+            scheme: "CD starter project",
+            configuration: "Release",
+            export_method: "app-store",
+            output_directory: "./build",
+            output_name: "CD_starter_project",
+            clean: false, # Don't clean again
+            codesigning_identity: "iPhone Distribution",
+            export_options: {
+              method: "app-store",
+              signingStyle: "manual",
+              teamID: ENV["DEVELOPMENT_TEAM"],
+              provisioningProfiles: {
+                "com.othmanshahrouri.cd.starter.project" => alt_name
+              },
+              uploadBitcode: false,
+              uploadSymbols: true,
+              compileBitcode: false
+            }
+          )
+          
+          UI.success("🎉 Build completed with profile: #{alt_name}")
+          success = true
+          break
+          
+        rescue => ex_alt
+          UI.message("❌ Failed with profile '#{alt_name}': #{ex_alt.message}")
+          next
+        end
+      end
+      
+      unless success
+        UI.error("❌ All provisioning profile attempts failed")
         UI.important("💡 Check the provisioning profile is correctly installed and named")
         UI.important("🔧 Verify the base64 encoding and GitHub secret configuration")
-        raise ex2
+        raise "All provisioning profile attempts failed"
       end
     end
+    
+    # Upload to TestFlight (this runs after successful build, regardless of which attempt worked)
+    UI.message("📤 Uploading to TestFlight...")
+    upload_to_testflight(
+      api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY],
+      skip_submission: true,
+      skip_waiting_for_build_processing: true
+    )
+    
+    UI.success("🎉 Successfully uploaded to TestFlight!")
   end
 
   desc "🧪 Run unit tests"
