@@ -316,7 +316,8 @@ PLATFORMS
 
 DEPENDENCIES
   cocoapods (~> 1.15)
-  fastlane (~> 2.217)
+  fastlane (= 2.228.0)
+  xcpretty (~> 0.4)
 
 BUNDLED WITH
    2.5.16
