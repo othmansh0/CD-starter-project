@@ -11,6 +11,73 @@ platform :ios do
     )
   end
 
+  desc "🔧 SETUP: Create missing provisioning profiles"
+  lane :setup_profiles do
+    key_id = ENV["API_KEY_ID"]
+    issuer_id = ENV["API_ISSUER_ID"]
+    key_content = ENV["API_KEY_BASE64"]
+    
+    puts "🔧 SETUP: Creating missing provisioning profiles"
+    puts "📋 This will create the App Store and Development profiles needed for builds"
+    
+    # Ensure we have all required API keys
+    unless key_id && issuer_id && key_content &&
+           !key_id.empty? && !issuer_id.empty? && !key_content.empty?
+      UI.user_error!("❌ Missing App Store Connect API credentials. Please configure API_KEY_ID, API_ISSUER_ID, and API_KEY_BASE64 secrets.")
+    end
+    
+    puts "🔑 Setting up App Store Connect API key..."
+    app_store_connect_api_key(
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_content: key_content,
+      is_key_content_base64: true,
+      duration: 1200,
+      in_house: false
+    )
+    puts "✅ API key setup successful"
+    
+    bundle_id = "com.othmanshahrouri.cd.starter.project"
+    team_id = ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV"
+    
+    puts "🏗️  Creating provisioning profiles for #{bundle_id}..."
+    
+    begin
+      puts "📱 Creating Development provisioning profile..."
+      # Create Development profile
+      get_provisioning_profile(
+        app_identifier: bundle_id,
+        type: "development",
+        force: true,
+        team_id: team_id,
+        filename: "Development_#{bundle_id}.mobileprovision"
+      )
+      puts "✅ Development profile created successfully"
+    rescue => e
+      puts "⚠️  Development profile creation failed: #{e.message}"
+    end
+    
+    begin
+      puts "🏪 Creating App Store provisioning profile..."
+      # Create App Store profile  
+      get_provisioning_profile(
+        app_identifier: bundle_id,
+        type: "appstore",
+        force: true,
+        team_id: team_id,
+        filename: "AppStore_#{bundle_id}.mobileprovision"
+      )
+      puts "✅ App Store profile created successfully"
+    rescue => e
+      puts "⚠️  App Store profile creation failed: #{e.message}"
+    end
+    
+    puts ""
+    puts "🎯 SETUP COMPLETE"
+    puts "📋 Provisioning profiles have been created. Now try building again!"
+    puts "💡 Use /build to test App Store build or /diagnostic to test Development build"
+  end
+
   desc "🔍 DIAGNOSTIC: Test API key permissions (no build)"
   lane :diagnostic_api_permissions do
     key_id = ENV["API_KEY_ID"]
