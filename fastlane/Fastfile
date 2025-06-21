@@ -229,8 +229,6 @@ platform :ios do
       get_provisioning_profile(
         app_identifier: "com.othmanshahrouri.cd.starter.project",
         api_key: api_key,
-        adhoc: false,
-        development: false,
         force: true,
         filename: "AppStore_Profile.mobileprovision"
       )
