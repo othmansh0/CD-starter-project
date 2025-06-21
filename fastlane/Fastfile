@@ -47,7 +47,7 @@ platform :ios do
       # Create Development profile
       get_provisioning_profile(
         app_identifier: bundle_id,
-        type: "development",
+        development: true,
         force: true,
         team_id: team_id,
         filename: "Development_#{bundle_id}.mobileprovision"
@@ -62,7 +62,8 @@ platform :ios do
       # Create App Store profile  
       get_provisioning_profile(
         app_identifier: bundle_id,
-        type: "appstore",
+        adhoc: false,
+        development: false,
         force: true,
         team_id: team_id,
         filename: "AppStore_#{bundle_id}.mobileprovision"
@@ -208,7 +209,7 @@ platform :ios do
     begin
       get_provisioning_profile(
         app_identifier: "com.othmanshahrouri.cd.starter.project",
-        type: "development",
+        development: true,
         force: true,
         team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV",
         filename: "Development_Profile.mobileprovision"
@@ -293,7 +294,8 @@ platform :ios do
     begin
       get_provisioning_profile(
         app_identifier: "com.othmanshahrouri.cd.starter.project",
-        type: "appstore",
+        adhoc: false,
+        development: false,
         force: true,
         team_id: ENV['DEVELOPMENT_TEAM'] || "F62HZKRPDV",
         filename: "AppStore_Profile.mobileprovision"
