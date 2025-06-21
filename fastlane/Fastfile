@@ -252,4 +252,57 @@ platform :ios do
     
     UI.success("🎉 Successfully uploaded to TestFlight!")
   end
+
+  desc "🧪 LOCAL TEST: Test certificate import without API keys"
+  lane :test_local_setup do
+    UI.header("🧪 LOCAL TEST: Testing certificate import")
+    UI.message("🔍 This tests the CI setup without requiring API keys")
+    
+    begin
+      # Test keychain creation
+      create_keychain(
+        name: "fastlane_tmp_keychain",
+        password: "temp_password",
+        default_keychain: true,
+        unlock: true,
+        timeout: 3600,
+        lock_when_sleeps: false
+      )
+      UI.success("✅ Keychain creation successful")
+      
+      # Test certificate download and import
+      UI.message("📥 Downloading Apple WWDR certificates...")
+      sh("curl -o /tmp/AppleWWDRCAG3.cer https://developer.apple.com/certificationauthority/AppleWWDRCAG3.cer")
+      import_certificate(
+        certificate_path: "/tmp/AppleWWDRCAG3.cer",
+        keychain_name: "fastlane_tmp_keychain",
+        keychain_password: "temp_password"
+      )
+      UI.success("✅ G3 certificate import successful")
+      
+      # Also import the newer G4 certificate for better compatibility
+      sh("curl -o /tmp/AppleWWDRCAG4.cer https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer")
+      import_certificate(
+        certificate_path: "/tmp/AppleWWDRCAG4.cer",
+        keychain_name: "fastlane_tmp_keychain",
+        keychain_password: "temp_password"
+      )
+      UI.success("✅ G4 certificate import successful")
+      
+      UI.success("🎉 Local setup test completed successfully!")
+      UI.message("💡 Certificate import is working - CI environment setup is ready")
+      
+    rescue => ex
+      UI.error("❌ Local setup test failed: #{ex}")
+      raise ex
+    ensure
+      # Clean up
+      begin
+        delete_keychain(name: "fastlane_tmp_keychain")
+        UI.message("🧹 Cleaned up test keychain")
+      rescue
+        # Ignore cleanup errors
+      end
+    end
+  end
 end 
