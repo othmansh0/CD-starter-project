@@ -38,6 +38,16 @@ platform :ios do
     
     puts "🏗️  Building for App Store distribution..."
     
+    # Create AuthKey.p8 file from base64 content for xcodebuild authentication
+    begin
+      auth_key_content = Base64.decode64(ENV['API_KEY_BASE64'])
+      auth_key_path = "/tmp/AuthKey_#{ENV['API_KEY_ID']}.p8"
+      File.binwrite(auth_key_path, auth_key_content)
+      puts "✅ Created AuthKey.p8 file for xcodebuild authentication"
+    rescue => e
+      UI.user_error!("❌ Failed to create AuthKey.p8 file: #{e.message}")
+    end
+    
     # Enable automatic signing - let Xcode handle everything
     automatic_code_signing(
       use_automatic_signing: true,
@@ -51,8 +61,8 @@ platform :ios do
       output_directory: "./build",
       output_name: "CD_starter_project",
       clean: true,
-      # Let Xcode automatically manage certificates and profiles
-      xcargs: "-allowProvisioningUpdates",
+      # Pass API key credentials to xcodebuild for automatic certificate/profile management
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{auth_key_path} -authenticationKeyID #{ENV['API_KEY_ID']} -authenticationKeyIssuerID #{ENV['API_ISSUER_ID']}",
       export_options: {
         method: "app-store",
         signingStyle: "automatic",
