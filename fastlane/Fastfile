@@ -35,7 +35,7 @@ platform :ios do
       UI.header("Attempting build with manual signing...")
 
       # Ensure secrets are available
-      unless ENV['DISTRIBUTION_CERTIFICATE'] && ENV['APP_STORE_PROVISIONING_PROFILE_BASE64']
+      unless ENV['DISTRIBUTION_CERTIFICATE'] && ENV['APP_STORE_PROFILE_BASE64']
         UI.important("Manual signing secrets not found. Skipping to cloud signing.")
         build_with_api_key
         return
@@ -43,7 +43,7 @@ platform :ios do
 
       # Install the provisioning profile from a base64 encoded secret
       profile_path = install_provisioning_profile_from_secret(
-        secret_name: 'APP_STORE_PROVISIONING_PROFILE_BASE64',
+        secret_name: 'APP_STORE_PROFILE_BASE64',
         profile_name: 'AppStore_Profile.mobileprovision'
       )
       
