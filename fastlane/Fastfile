@@ -115,8 +115,8 @@ platform :ios do
       app_identifier: app_identifier,
       username: ENV["FASTLANE_USERNAME"],
       team_id: ENV["DEVELOPMENT_TEAM"],
-      adhoc: false,  # App Store profile
-      readonly: true # Don't create new profiles in CI
+      adhoc: false  # App Store profile
+      # Note: Removed readonly to allow profile creation if needed
     )
 
     UI.success("✅ Code signing setup complete!")
