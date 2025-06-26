@@ -65,7 +65,7 @@ platform :ios do
     )
 
     # Build the app with manual signing (certificates and profiles already imported)
-    xcargs = "CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER=#{profile_uuid}"
+    xcargs = "CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER=#{profile_uuid} CODE_SIGN_IDENTITY=\"Apple Distribution\""
     gym(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
