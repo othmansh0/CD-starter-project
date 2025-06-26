@@ -129,13 +129,11 @@ platform :ios do
         uploadSymbols: true,
         compileBitcode: false
       },
-      # Pass API key info and force distribution signing during archive phase
+      # Pass API key info for automatic provisioning and signing
       xcargs: "-allowProvisioningUpdates " +
               "-authenticationKeyPath '#{api_key_path}' " +
               "-authenticationKeyID '#{ENV['API_KEY_ID']}' " +
-              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}' " +
-              "CODE_SIGN_IDENTITY='Apple Distribution' " +
-              "PROVISIONING_PROFILE_SPECIFIER=''"
+              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}'"
     )
 
     UI.success("✅ Build successful with cloud signing!")
