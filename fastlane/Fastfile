@@ -116,7 +116,6 @@ platform :ios do
       username: ENV["FASTLANE_USERNAME"],
       team_id: ENV["DEVELOPMENT_TEAM"],
       adhoc: false,  # App Store profile
-      force: false,  # Don't force recreation in CI
       readonly: true # Don't create new profiles in CI
     )
 
