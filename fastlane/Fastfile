@@ -70,8 +70,8 @@ platform :ios do
       UI.message("Please ensure FASTLANE_USERNAME and FASTLANE_PASSWORD are set")
     end
 
-    # Build the app with automatic signing enabled
-    xcargs = "-allowProvisioningUpdates"
+    # Build the app with explicit automatic signing configuration
+    xcargs = "-allowProvisioningUpdates CODE_SIGN_STYLE=Automatic"
     if ENV["DEVELOPMENT_TEAM"]
       xcargs += " DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM']}"
     end
