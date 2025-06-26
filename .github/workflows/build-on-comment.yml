@@ -245,10 +245,10 @@ jobs:
               -d '{"body":"✅ 🧪 **TEST BUILD SUCCESS!** Full App Store pipeline test completed! 🎉\n\n**This proves:**\n- ✅ Complete CI/CD pipeline works perfectly\n- ✅ Archive phase succeeds (Release configuration)\n- ✅ Export phase works with Development method\n- ❌ **Only issue:** Distribution export blocked by permissions\n\n**Conclusion:** Your setup is perfect - just need Distribution certificate permissions!"}' \
               "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
           else
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -X POST \
               -d '{"body":"✅ App Store build completed successfully! 🎉"}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
           fi
 
       - name: Announce failure
@@ -285,8 +285,8 @@ jobs:
               -d '{"body":"❌ 🧪 Test build failed! This suggests a configuration issue beyond just permissions. Please check the workflow logs."}' \
               "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
           else
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -X POST \
               -d '{"body":"❌ App Store build failed! Please check the workflow logs for details."}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" 
           fi 

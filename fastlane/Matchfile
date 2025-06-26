@@ -1,0 +1,10 @@
+git_url(ENV["MATCH_GIT_URL"])
+storage_mode("git")
+
+type("development") # The default type, can be: appstore, adhoc, development, enterprise
+app_identifier(ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project")
+username(ENV["FASTLANE_USERNAME"])
+team_id(ENV["DEVELOPMENT_TEAM"])
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile 

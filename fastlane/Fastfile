@@ -15,103 +15,56 @@ default_platform(:ios)
 platform :ios do
 
   # ---------------------------------------------------------------------------
-  # Main entry lane for CI. This lane will try to build and upload the app
-  # using manual signing first, and fall back to cloud signing if it fails.
+  # Main entry lane for CI/CD
   # ---------------------------------------------------------------------------
   desc "Build and upload the app to TestFlight"
   lane :build_and_upload do
     setup_ci_environment
-    build_and_upload_manually
+    
+    build(
+      app_identifier: ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project",
+      build_type: "appstore",
+      version_number: ENV["VERSION_NUMBER"],
+      build_number: ENV["BUILD_NUMBER"]
+    )
+    
+    upload_to_testflight(
+      ipa: "./build/CD_starter_project.ipa",
+      skip_waiting_for_build_processing: true,
+      notify_external_testers: false
+    )
+    
+    UI.success("🎉 Successfully uploaded to TestFlight!")
   end
 
   # ---------------------------------------------------------------------------
-  # Private Lanes - Implementation Details
+  # Build lane - simplified approach using match + sigh
   # ---------------------------------------------------------------------------
+  private_lane :build do |options|
+    app_identifier = options[:app_identifier]
+    build_type = options[:build_type]
+    version_number = options[:version_number]
+    build_number = options[:build_number]
 
-  # --- Build Method 1: Manual Signing ---
-  # This lane uses a certificate and provisioning profile stored in secrets.
-  private_lane :build_and_upload_manually do
-    begin
-      UI.header("Attempting build with manual signing...")
-
-      # Ensure secrets are available
-      unless ENV['DISTRIBUTION_CERTIFICATE'] && ENV['APP_STORE_PROFILE_BASE64']
-        UI.important("Manual signing secrets not found. Skipping to cloud signing.")
-        build_with_api_key
-        return
-      end
-
-      # Install the provisioning profile from a base64 encoded secret
-      profile_path = install_provisioning_profile_from_secret(
-        secret_name: 'APP_STORE_PROFILE_BASE64',
-        profile_name: 'AppStore_Profile.mobileprovision'
-      )
-      
-      # Get the UUID of the installed profile to avoid name ambiguity
-      profile_uuid = Fastlane::Actions::GetProvisioningProfileInfoAction.run(path: profile_path)[:uuid]
-      UI.message("Provisioning Profile UUID: #{profile_uuid}")
-
-      # Update project settings to use manual signing with the specific profile UUID
-      update_code_signing_settings(
-        use_automatic_signing: false,
-        targets: ["CD starter project"],
-        code_sign_identity: "Apple Distribution", # Use "Apple Distribution" for modern Xcode
-        profile_uuid: profile_uuid,
-        team_id: ENV['DEVELOPMENT_TEAM'],
-        path: "CD starter project.xcodeproj"
-      )
-      
-      UI.message("🏗️ Building and archiving with manual signing settings...")
-
-      # Build the app using the manual settings
-      gym(
-        project: "CD starter project.xcodeproj",
-        scheme: "CD starter project",
-        configuration: "Release",
-        output_directory: "./build",
-        output_name: "CD_starter_project",
-        clean: true,
-        export_method: "app-store",
-        export_options: {
-          method: "app-store",
-          signingStyle: "manual",
-          teamID: ENV['DEVELOPMENT_TEAM'],
-          provisioningProfiles: {
-            "com.othmanshahrouri.cd.starter.project" => profile_uuid
-          }
-        }
-      )
-
-      UI.success("✅ Build successful with manual signing!")
-      
-      # If build is successful, proceed to upload
-      upload_tf
-
-    rescue => e
-      UI.error("❌ Manual signing failed: #{e.message}")
-      UI.important("💡 Falling back to cloud signing with App Store Connect API Key...")
-      build_with_api_key
+    # Set version and build numbers if provided
+    if version_number
+      increment_version_number(version_number: version_number)
     end
-  end
+    
+    if build_number
+      increment_build_number(build_number: build_number)
+    end
 
-  # --- Build Method 2: Cloud Signing (Fallback) ---
-  # This lane uses the App Store Connect API key to let Xcode manage signing.
-  private_lane :build_with_api_key do
-    UI.header("Attempting build with cloud signing (App Store Connect API Key)...")
+    # Setup App Store Connect API key
     setup_api_key
 
-    # Ensure project is set for automatic signing
-    update_code_signing_settings(
-      use_automatic_signing: true,
-      team_id: ENV['DEVELOPMENT_TEAM'],
-      path: "CD starter project.xcodeproj"
+    # Setup certificates and provisioning profiles using match and sigh
+    setup_code_signing(
+      build_type: build_type,
+      app_identifier: app_identifier
     )
 
-    # Create the API key file manually for xcodebuild
-    api_key_path = "/tmp/AuthKey_#{ENV['API_KEY_ID']}.p8"
-    File.binwrite(api_key_path, Base64.decode64(ENV['API_KEY_BASE64']))
-
-    # Build the app, passing the API key to xcodebuild for cloud signing
+    # Build the app with simple configuration
     gym(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
@@ -120,110 +73,96 @@ platform :ios do
       output_name: "CD_starter_project",
       clean: true,
       export_method: "app-store",
-      # Simplified export options for automatic signing
+      include_bitcode: false,
       export_options: {
         method: "app-store",
-        signingStyle: "automatic",
-        teamID: ENV['DEVELOPMENT_TEAM'],
-        uploadBitcode: false,
-        uploadSymbols: true,
         compileBitcode: false
-      },
-      # Pass API key info for automatic provisioning and signing
-      xcargs: "-allowProvisioningUpdates " +
-              "-authenticationKeyPath '#{api_key_path}' " +
-              "-authenticationKeyID '#{ENV['API_KEY_ID']}' " +
-              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}'"
+      }
     )
 
-    UI.success("✅ Build successful with cloud signing!")
-
-    # If build is successful, proceed to upload
-    upload_tf
+    UI.success("✅ Build successful!")
   end
-  
-  # --- Upload Lane ---
-  private_lane :upload_tf do
-    UI.header("🚀 Uploading to TestFlight...")
-    setup_api_key # Ensure API key is set for upload
+
+  # ---------------------------------------------------------------------------
+  # Code signing setup using match and sigh
+  # ---------------------------------------------------------------------------
+  private_lane :setup_code_signing do |options|
+    build_type = options[:build_type]
+    app_identifier = options[:app_identifier]
     
-    upload_to_testflight(
-      ipa: "./build/CD_starter_project.ipa",
-      skip_waiting_for_build_processing: true,
-      notify_external_testers: false
+    UI.header("🔑 Setting up code signing for #{build_type} build...")
+
+    # Use match for certificate management (if git repo is configured)
+    if ENV["MATCH_GIT_URL"] && !ENV["MATCH_GIT_URL"].empty?
+      UI.message("📱 Using match for certificate management...")
+      
+      match(
+        type: build_type,
+        app_identifier: app_identifier,
+        git_url: ENV["MATCH_GIT_URL"],
+        username: ENV["FASTLANE_USERNAME"],
+        team_id: ENV["DEVELOPMENT_TEAM"],
+        readonly: true  # Don't create new certificates in CI
+      )
+    else
+      UI.message("⚠️ No MATCH_GIT_URL configured, skipping match...")
+    end
+
+    # Use sigh for provisioning profile management
+    UI.message("📋 Setting up provisioning profiles with sigh...")
+    
+    sigh(
+      app_identifier: app_identifier,
+      username: ENV["FASTLANE_USERNAME"],
+      team_id: ENV["DEVELOPMENT_TEAM"],
+      adhoc: false,  # App Store profile
+      force: false,  # Don't force recreation in CI
+      readonly: true # Don't create new profiles in CI
     )
-    UI.success("🎉 Successfully uploaded to TestFlight!")
+
+    UI.success("✅ Code signing setup complete!")
   end
 
-
   # ---------------------------------------------------------------------------
-  # Helper Lanes
+  # CI Environment setup
   # ---------------------------------------------------------------------------
-
-  # Sets up the App Store Connect API key for use in other lanes
-  private_lane :setup_api_key do
-    app_store_connect_api_key(
-      key_id: ENV["API_KEY_ID"],
-      issuer_id: ENV["API_ISSUER_ID"],
-      key_content: ENV["API_KEY_BASE64"],
-      is_key_content_base64: true
-    )
-    UI.success("✅ API key setup successful")
-  end
-
-  # Creates a temporary keychain and imports necessary certificates for CI
   private_lane :setup_ci_environment do
     UI.header("🔧 Setting up CI environment...")
     
-    # Create a temporary keychain
-    keychain_name = "fastlane_tmp_keychain"
-    keychain_password = "temp_password"
-    create_keychain(
-      name: keychain_name,
-      password: keychain_password,
-      default_keychain: true,
-      unlock: true,
-      timeout: 3600
-    )
-    
-    # Import Apple WWDR certificates
-    sh("curl -o /tmp/AppleWWDRCAG3.cer https://developer.apple.com/certificationauthority/AppleWWDRCAG3.cer")
-    import_certificate(certificate_path: "/tmp/AppleWWDRCAG3.cer", keychain_name: keychain_name)
-    
-    # Import the distribution certificate from secrets, if it exists
-    if ENV["DISTRIBUTION_CERTIFICATE"] && !ENV["DISTRIBUTION_CERTIFICATE"].empty?
-      UI.message("📱 Importing Distribution certificate...")
-      cert_path = "/tmp/distribution.p12"
-      File.binwrite(cert_path, Base64.decode64(ENV['DISTRIBUTION_CERTIFICATE']))
-      
-      import_certificate(
-        certificate_path: cert_path,
-        certificate_password: ENV["DISTRIBUTION_PASSWORD"] || "",
-        keychain_name: keychain_name
+    # Create a temporary keychain for CI
+    if is_ci
+      create_keychain(
+        name: "fastlane_tmp_keychain",
+        password: "temp_password",
+        default_keychain: true,
+        unlock: true,
+        timeout: 3600
       )
-      UI.success("✅ Distribution certificate imported")
-    else
-      UI.message("⚠️ No Distribution certificate provided. Manual signing will be skipped.")
     end
-  end
-
-  # Installs a provisioning profile from a base64 encoded environment variable
-  private_lane :install_provisioning_profile_from_secret do |options|
-    secret = ENV[options[:secret_name]]
-    profile_path = "/tmp/#{options[:profile_name]}"
     
-    File.binwrite(profile_path, Base64.decode64(secret))
-    
-    install_provisioning_profile(path: profile_path)
-    
-    UI.success("✅ Provisioning profile installed from secret")
-    
-    # Return the path for later use
-    profile_path
+    UI.success("✅ CI environment setup complete!")
   end
 
   # ---------------------------------------------------------------------------
-  # Testing lane expected by CI workflow
+  # App Store Connect API key setup
+  # ---------------------------------------------------------------------------
+  private_lane :setup_api_key do
+    # Only setup API key if all required environment variables are present
+    if ENV["API_KEY_ID"] && ENV["API_ISSUER_ID"] && ENV["API_KEY_BASE64"]
+      app_store_connect_api_key(
+        key_id: ENV["API_KEY_ID"],
+        issuer_id: ENV["API_ISSUER_ID"],
+        key_content: ENV["API_KEY_BASE64"],
+        is_key_content_base64: true
+      )
+      UI.success("✅ App Store Connect API key setup successful")
+    else
+      UI.message("⚠️ App Store Connect API key not configured (missing environment variables)")
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Testing lane
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
   lane :test do
@@ -233,6 +172,29 @@ platform :ios do
       clean: true,
       device: "iPhone 15",
       only_testing: ["CD starter projectTests"]
+    )
+  end
+
+  # ---------------------------------------------------------------------------
+  # Development helper lanes
+  # ---------------------------------------------------------------------------
+  desc "Setup certificates and profiles for development"
+  lane :setup_dev_signing do
+    setup_api_key
+    
+    setup_code_signing(
+      build_type: "development",
+      app_identifier: ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project"
+    )
+  end
+
+  desc "Setup certificates and profiles for App Store"
+  lane :setup_appstore_signing do
+    setup_api_key
+    
+    setup_code_signing(
+      build_type: "appstore",
+      app_identifier: ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project"
     )
   end
 
