@@ -84,7 +84,7 @@ platform :ios do
   end
 
   # ---------------------------------------------------------------------------
-  # Code signing setup using match and sigh
+  # Code signing setup using match, cert, and sigh
   # ---------------------------------------------------------------------------
   private_lane :setup_code_signing do |options|
     build_type = options[:build_type]
@@ -105,7 +105,14 @@ platform :ios do
         readonly: true  # Don't create new certificates in CI
       )
     else
-      UI.message("⚠️ No MATCH_GIT_URL configured, skipping match...")
+      UI.message("⚠️ No MATCH_GIT_URL configured, using cert for certificate management...")
+      
+      # Use cert to download/create distribution certificate
+      cert(
+        username: ENV["FASTLANE_USERNAME"],
+        team_id: ENV["DEVELOPMENT_TEAM"],
+        development: build_type == "development"
+      )
     end
 
     # Use sigh for provisioning profile management
