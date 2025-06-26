@@ -107,6 +107,10 @@ platform :ios do
       path: "CD starter project.xcodeproj"
     )
 
+    # Create the API key file manually for xcodebuild
+    api_key_path = "/tmp/AuthKey_#{ENV['API_KEY_ID']}.p8"
+    File.binwrite(api_key_path, Base64.decode64(ENV['API_KEY_BASE64']))
+
     # Build the app, passing the API key to xcodebuild for cloud signing
     gym(
       project: "CD starter project.xcodeproj",
@@ -117,7 +121,7 @@ platform :ios do
       clean: true,
       export_method: "app-store",
       xcargs: "-allowProvisioningUpdates " +
-              "-authenticationKeyPath '#{lane_context[SharedValues::APP_STORE_CONNECT_API_KEY_PATH]}' " +
+              "-authenticationKeyPath '#{api_key_path}' " +
               "-authenticationKeyID '#{ENV['API_KEY_ID']}' " +
               "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}'"
     )
