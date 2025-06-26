@@ -120,11 +120,24 @@ platform :ios do
       output_name: "CD_starter_project",
       clean: true,
       export_method: "app-store",
+      # Use export_options to specify App Store signing instead of xcargs
+      export_options: {
+        method: "app-store",
+        signingStyle: "automatic",
+        teamID: ENV['DEVELOPMENT_TEAM'],
+        # Force App Store signing instead of Development
+        signingCertificate: "Apple Distribution",
+        # Ensure we're building for distribution, not development
+        destination: "export",
+        uploadBitcode: false,
+        uploadSymbols: true,
+        compileBitcode: false
+      },
+      # Pass API key info to xcodebuild for automatic provisioning
       xcargs: "-allowProvisioningUpdates " +
               "-authenticationKeyPath '#{api_key_path}' " +
               "-authenticationKeyID '#{ENV['API_KEY_ID']}' " +
-              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}' " +
-              "DEVELOPMENT_TEAM='#{ENV['DEVELOPMENT_TEAM']}'"
+              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}'"
     )
 
     UI.success("✅ Build successful with cloud signing!")
