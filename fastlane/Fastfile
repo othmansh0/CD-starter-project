@@ -217,7 +217,8 @@ platform :ios do
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
       clean: true,
-      device: "iPhone 15"
+      device: "iPhone 15",
+      only_testing: ["CD starter projectTests"]
     )
   end
 
