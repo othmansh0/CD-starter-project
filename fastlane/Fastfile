@@ -137,7 +137,10 @@ platform :ios do
       xcargs: "-allowProvisioningUpdates " +
               "-authenticationKeyPath '#{api_key_path}' " +
               "-authenticationKeyID '#{ENV['API_KEY_ID']}' " +
-              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}'"
+              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}' " +
+              # Force distribution signing for the archive step itself
+              "CODE_SIGN_IDENTITY='Apple Distribution' " +
+              "DEVELOPMENT_TEAM='#{ENV['DEVELOPMENT_TEAM']}'"
     )
 
     UI.success("✅ Build successful with cloud signing!")
