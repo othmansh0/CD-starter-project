@@ -123,7 +123,8 @@ platform :ios do
       xcargs: "-allowProvisioningUpdates " +
               "-authenticationKeyPath '#{api_key_path}' " +
               "-authenticationKeyID '#{ENV['API_KEY_ID']}' " +
-              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}'"
+              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}' " +
+              "DEVELOPMENT_TEAM='#{ENV['TEAM_ID']}'"
     )
 
     UI.success("✅ Build successful with cloud signing!")
