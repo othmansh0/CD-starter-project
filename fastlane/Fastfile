@@ -57,7 +57,7 @@ platform :ios do
         targets: ["CD starter project"],
         code_sign_identity: "Apple Distribution", # Use "Apple Distribution" for modern Xcode
         profile_uuid: profile_uuid,
-        team_id: ENV['TEAM_ID'],
+        team_id: ENV['DEVELOPMENT_TEAM'],
         path: "CD starter project.xcodeproj"
       )
       
@@ -75,7 +75,7 @@ platform :ios do
         export_options: {
           method: "app-store",
           signingStyle: "manual",
-          teamID: ENV['TEAM_ID'],
+          teamID: ENV['DEVELOPMENT_TEAM'],
           provisioningProfiles: {
             "com.othmanshahrouri.cd.starter.project" => profile_uuid
           }
@@ -103,7 +103,7 @@ platform :ios do
     # Ensure project is set for automatic signing
     update_code_signing_settings(
       use_automatic_signing: true,
-      team_id: ENV['TEAM_ID'],
+      team_id: ENV['DEVELOPMENT_TEAM'],
       path: "CD starter project.xcodeproj"
     )
 
@@ -123,7 +123,8 @@ platform :ios do
       xcargs: "-allowProvisioningUpdates " +
               "-authenticationKeyPath '#{api_key_path}' " +
               "-authenticationKeyID '#{ENV['API_KEY_ID']}' " +
-              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}'"
+              "-authenticationKeyIssuerID '#{ENV['API_ISSUER_ID']}' " +
+              "DEVELOPMENT_TEAM='#{ENV['DEVELOPMENT_TEAM']}'"
     )
 
     UI.success("✅ Build successful with cloud signing!")
