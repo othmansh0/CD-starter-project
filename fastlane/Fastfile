@@ -59,13 +59,13 @@ platform :ios do
     setup_api_key
 
     # Setup certificates and provisioning profiles using manual import
-    signing_info = setup_code_signing(
+    profile_uuid = setup_code_signing(
       build_type: build_type,
       app_identifier: app_identifier
     )
 
     # Build the app with manual signing (certificates and profiles already imported)
-    xcargs = "CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER=#{signing_info[:profile_uuid]} CODE_SIGN_IDENTITY=\"#{signing_info[:certificate_name]}\""
+    xcargs = "CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER=#{profile_uuid} CODE_SIGN_IDENTITY=\"Apple Distribution\""
     gym(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
@@ -80,9 +80,8 @@ platform :ios do
         method: "app-store",
         compileBitcode: false,
         signingStyle: "manual",
-        teamID: ENV["DEVELOPMENT_TEAM"],
         provisioningProfiles: {
-          app_identifier => signing_info[:profile_uuid]
+          app_identifier => profile_uuid
         }
       }
     )
@@ -99,8 +98,6 @@ platform :ios do
     
     UI.header("🔑 Setting up code signing for #{build_type} build...")
 
-    certificate_name = nil
-    
     # Use match for certificate management (if git repo is configured)
     if ENV["MATCH_GIT_URL"] && !ENV["MATCH_GIT_URL"].empty?
       UI.message("📱 Using match for certificate management...")
@@ -113,9 +110,6 @@ platform :ios do
         team_id: ENV["DEVELOPMENT_TEAM"],
         readonly: true  # Don't create new certificates in CI
       )
-      
-      # For match, use the standard certificate name
-      certificate_name = "Apple Distribution"
     else
       UI.message("⚠️ No MATCH_GIT_URL configured, using manual certificate import...")
       
@@ -126,31 +120,6 @@ platform :ios do
         # Decode and import the certificate
         certificate_path = "/tmp/distribution_certificate.p12"
         File.write(certificate_path, Base64.decode64(ENV["DISTRIBUTION_CERTIFICATE"]))
-        
-        # Extract certificate name before importing
-        begin
-          certificate_info = `openssl pkcs12 -in "#{certificate_path}" -nokeys -passin pass:'#{ENV["DISTRIBUTION_PASSWORD"]}' 2>/dev/null | openssl x509 -noout -subject 2>/dev/null`
-          UI.message("📋 Certificate info: #{certificate_info.strip}")
-          
-          if certificate_info.include?("iPhone Distribution") || certificate_info.include?("Apple Distribution")
-            # Extract the certificate name from the subject line
-            cn_match = certificate_info.match(/CN=([^,\/]+)/)
-            if cn_match
-              certificate_name = cn_match[1].strip
-              UI.message("📋 Extracted certificate name: #{certificate_name}")
-            else
-              certificate_name = "Apple Distribution"
-              UI.message("📋 Using fallback certificate name: #{certificate_name}")
-            end
-          else
-            certificate_name = "Apple Distribution"
-            UI.message("📋 Using default certificate name: #{certificate_name}")
-          end
-        rescue => e
-          UI.error("📋 Failed to extract certificate name: #{e.message}")
-          certificate_name = "Apple Distribution"
-          UI.message("📋 Using fallback certificate name: #{certificate_name}")
-        end
         
         # Import certificate to keychain
         import_certificate(
@@ -200,18 +169,7 @@ platform :ios do
     end
 
     UI.success("✅ Code signing setup complete!")
-    
-    # Ensure certificate_name is never nil or empty
-    if certificate_name.nil? || certificate_name.empty?
-      certificate_name = "Apple Distribution"
-      UI.message("📋 Certificate name was empty, using fallback: #{certificate_name}")
-    end
-    
-    # Return both profile UUID and certificate name
-    {
-      profile_uuid: profile_uuid,
-      certificate_name: certificate_name
-    }
+    profile_uuid
   end
 
   # ---------------------------------------------------------------------------
