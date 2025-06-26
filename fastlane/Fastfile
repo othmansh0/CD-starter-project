@@ -58,24 +58,13 @@ platform :ios do
     # Setup App Store Connect API key
     setup_api_key
 
-    # For automatic signing, we need to authenticate with Apple ID
-    UI.message("🔧 Setting up Apple ID authentication for automatic signing...")
-    
-    if ENV["FASTLANE_USERNAME"] && ENV["FASTLANE_PASSWORD"]
-      UI.message("🔐 Authenticating with Apple ID...")
-      # This will authenticate and cache the session
-      ENV["FASTLANE_DONT_STORE_PASSWORD"] = "1"
-    else
-      UI.message("⚠️ Apple ID credentials not found - automatic signing may fail")
-      UI.message("Please ensure FASTLANE_USERNAME and FASTLANE_PASSWORD are set")
-    end
+    # Setup certificates and provisioning profiles using manual import
+    setup_code_signing(
+      build_type: build_type,
+      app_identifier: app_identifier
+    )
 
-    # Build the app with explicit automatic signing configuration
-    xcargs = "-allowProvisioningUpdates CODE_SIGN_STYLE=Automatic"
-    if ENV["DEVELOPMENT_TEAM"]
-      xcargs += " DEVELOPMENT_TEAM=#{ENV['DEVELOPMENT_TEAM']}"
-    end
-    
+    # Build the app with manual signing (certificates and profiles already imported)
     gym(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
@@ -85,11 +74,9 @@ platform :ios do
       clean: true,
       export_method: "app-store",
       include_bitcode: false,
-      xcargs: xcargs,
       export_options: {
         method: "app-store",
-        compileBitcode: false,
-        teamID: ENV["DEVELOPMENT_TEAM"]
+        compileBitcode: false
       }
     )
 
