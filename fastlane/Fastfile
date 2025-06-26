@@ -58,13 +58,11 @@ platform :ios do
     # Setup App Store Connect API key
     setup_api_key
 
-    # Setup certificates and provisioning profiles using match and sigh
-    setup_code_signing(
-      build_type: build_type,
-      app_identifier: app_identifier
-    )
+    # For automatic signing, we don't need manual certificate/profile setup
+    # The App Store Connect API key + allowProvisioningUpdates will handle everything
+    UI.message("🔧 Using automatic signing with App Store Connect API...")
 
-    # Build the app with simple configuration
+    # Build the app with automatic signing enabled
     gym(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
@@ -74,6 +72,7 @@ platform :ios do
       clean: true,
       export_method: "app-store",
       include_bitcode: false,
+      xcargs: "-allowProvisioningUpdates",
       export_options: {
         method: "app-store",
         compileBitcode: false
