@@ -105,14 +105,33 @@ platform :ios do
         readonly: true  # Don't create new certificates in CI
       )
     else
-      UI.message("⚠️ No MATCH_GIT_URL configured, using cert for certificate management...")
+      UI.message("⚠️ No MATCH_GIT_URL configured, using manual certificate import...")
       
-      # Use cert to download/create distribution certificate
-      cert(
-        username: ENV["FASTLANE_USERNAME"],
-        team_id: ENV["DEVELOPMENT_TEAM"],
-        development: build_type == "development"
-      )
+      # Import existing certificate from environment variables
+      if ENV["DISTRIBUTION_CERTIFICATE"] && ENV["DISTRIBUTION_PASSWORD"]
+        UI.message("📜 Importing distribution certificate from environment...")
+        
+        # Decode and import the certificate
+        certificate_path = "/tmp/distribution_certificate.p12"
+        File.write(certificate_path, Base64.decode64(ENV["DISTRIBUTION_CERTIFICATE"]))
+        
+        # Import certificate to keychain
+        import_certificate(
+          certificate_path: certificate_path,
+          certificate_password: ENV["DISTRIBUTION_PASSWORD"],
+          keychain_name: "fastlane_tmp_keychain",
+          keychain_password: "temp_password"
+        )
+        
+        # Clean up temporary file
+        File.delete(certificate_path) if File.exist?(certificate_path)
+        
+        UI.success("✅ Distribution certificate imported successfully")
+      else
+        UI.error("❌ No distribution certificate found in environment variables")
+        UI.error("Please ensure DISTRIBUTION_CERTIFICATE and DISTRIBUTION_PASSWORD are set")
+        raise "Missing distribution certificate configuration"
+      end
     end
 
     # Use sigh for provisioning profile management
