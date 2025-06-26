@@ -5,17 +5,66 @@
     
     
       
-      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.000321">
+      <testcase classname="fastlane.lanes" name="00: default_platform" time="0.000268">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="1: Switch to ios setup_api_key lane" time="6.8e-05">
+      <testcase classname="fastlane.lanes" name="01: Switch to ios setup_ci_environment lane" time="0.000483">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="2: app_store_connect_api_key" time="110.427861">
+      <testcase classname="fastlane.lanes" name="02: create_keychain" time="0.062971">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="03: curl -o /tmp/AppleWWDRCAG3.cer https://developer.apple.com/certificationauthority/AppleWWDRCAG3.cer" time="0.730756">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="04: import_certificate" time="0.048534">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="05: Switch to ios build_and_upload_manually lane" time="0.000135">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="06: Switch to ios build_with_api_key lane" time="9.4e-05">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="07: Switch to ios setup_api_key lane" time="7.5e-05">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="08: app_store_connect_api_key" time="0.001009">
+        
+          <failure message="/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/actions/actions_helper.rb:67:in `execute_action&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:255:in `block in execute_action&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:229:in `chdir&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:229:in `execute_action&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:157:in `trigger_action_by_name&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/fast_file.rb:159:in `method_missing&apos;&#10;Fastfile:167:in `block (2 levels) in parsing_binding&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/lane.rb:41:in `call&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:204:in `try_switch_to_lane&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:146:in `trigger_action_by_name&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/fast_file.rb:159:in `method_missing&apos;&#10;Fastfile:101:in `block (2 levels) in parsing_binding&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/lane.rb:41:in `call&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:204:in `try_switch_to_lane&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:146:in `trigger_action_by_name&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/fast_file.rb:159:in `method_missing&apos;&#10;Fastfile:40:in `block (2 levels) in parsing_binding&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/lane.rb:41:in `call&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:204:in `try_switch_to_lane&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:146:in `trigger_action_by_name&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/fast_file.rb:159:in `method_missing&apos;&#10;Fastfile:24:in `block (2 levels) in parsing_binding&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/lane.rb:41:in `call&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:49:in `block in execute&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:45:in `chdir&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:45:in `execute&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/lane_manager.rb:46:in `cruise_lane&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/command_line_handler.rb:34:in `handle&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/commands_generator.rb:110:in `block (2 levels) in run&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/commander-4.6.0/lib/commander/command.rb:187:in `call&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/commander-4.6.0/lib/commander/command.rb:157:in `run&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/commander-4.6.0/lib/commander/runner.rb:444:in `run_active_command&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane_core/lib/fastlane_core/ui/fastlane_runner.rb:124:in `run!&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/commander-4.6.0/lib/commander/delegates.rb:18:in `run!&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/commands_generator.rb:363:in `run&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/commands_generator.rb:43:in `start&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/cli_tools_distributor.rb:123:in `take_off&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/bin/fastlane:23:in `&lt;top (required)&gt;&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/bin/fastlane:25:in `load&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/bin/fastlane:25:in `&lt;main&gt;&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/bin/ruby_executable_hooks:22:in `eval&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/bin/ruby_executable_hooks:22:in `&lt;main&gt;&apos;&#10;&#10;No value found for &apos;key_id&apos;" />
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="09: Switch to ios build_with_api_key lane" time="6.4e-05">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="10: Switch to ios setup_api_key lane" time="5.6e-05">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="11: app_store_connect_api_key" time="0.000157">
+        
+          <failure message="/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/actions/actions_helper.rb:67:in `execute_action&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:255:in `block in execute_action&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:229:in `chdir&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:229:in `execute_action&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:157:in `trigger_action_by_name&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/fast_file.rb:159:in `method_missing&apos;&#10;Fastfile:167:in `block (2 levels) in parsing_binding&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/lane.rb:41:in `call&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:204:in `try_switch_to_lane&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:146:in `trigger_action_by_name&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/fast_file.rb:159:in `method_missing&apos;&#10;Fastfile:101:in `block (2 levels) in parsing_binding&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/lane.rb:41:in `call&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:204:in `try_switch_to_lane&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:146:in `trigger_action_by_name&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/fast_file.rb:159:in `method_missing&apos;&#10;Fastfile:93:in `rescue in block (2 levels) in parsing_binding&apos;&#10;Fastfile:34:in `block (2 levels) in parsing_binding&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/lane.rb:41:in `call&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:204:in `try_switch_to_lane&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:146:in `trigger_action_by_name&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/fast_file.rb:159:in `method_missing&apos;&#10;Fastfile:24:in `block (2 levels) in parsing_binding&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/lane.rb:41:in `call&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:49:in `block in execute&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:45:in `chdir&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/runner.rb:45:in `execute&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/lane_manager.rb:46:in `cruise_lane&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/command_line_handler.rb:34:in `handle&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/commands_generator.rb:110:in `block (2 levels) in run&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/commander-4.6.0/lib/commander/command.rb:187:in `call&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/commander-4.6.0/lib/commander/command.rb:157:in `run&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/commander-4.6.0/lib/commander/runner.rb:444:in `run_active_command&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane_core/lib/fastlane_core/ui/fastlane_runner.rb:124:in `run!&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/commander-4.6.0/lib/commander/delegates.rb:18:in `run!&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/commands_generator.rb:363:in `run&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/commands_generator.rb:43:in `start&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/fastlane/lib/fastlane/cli_tools_distributor.rb:123:in `take_off&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/gems/fastlane-2.228.0/bin/fastlane:23:in `&lt;top (required)&gt;&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/bin/fastlane:25:in `load&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/bin/fastlane:25:in `&lt;main&gt;&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/bin/ruby_executable_hooks:22:in `eval&apos;&#10;/Users/othman.shahrouri/.rvm/gems/ruby-3.3.5/bin/ruby_executable_hooks:22:in `&lt;main&gt;&apos;&#10;&#10;No value found for &apos;key_id&apos;" />
         
       </testcase>
     
