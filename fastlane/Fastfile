@@ -134,16 +134,28 @@ platform :ios do
       end
     end
 
-    # Use sigh for provisioning profile management
-    UI.message("📋 Setting up provisioning profiles with sigh...")
+    # Use existing provisioning profile from environment variables
+    UI.message("📋 Setting up provisioning profiles from environment...")
     
-    sigh(
-      app_identifier: app_identifier,
-      username: ENV["FASTLANE_USERNAME"],
-      team_id: ENV["DEVELOPMENT_TEAM"],
-      adhoc: false  # App Store profile
-      # Note: Removed readonly to allow profile creation if needed
-    )
+    if ENV["APP_STORE_PROFILE_BASE64"]
+      UI.message("📱 Importing App Store provisioning profile from environment...")
+      
+      # Decode and save the provisioning profile
+      profile_path = "/tmp/appstore_profile.mobileprovision"
+      File.write(profile_path, Base64.decode64(ENV["APP_STORE_PROFILE_BASE64"]))
+      
+      # Install the provisioning profile
+      install_provisioning_profile(path: profile_path)
+      
+      # Clean up temporary file
+      File.delete(profile_path) if File.exist?(profile_path)
+      
+      UI.success("✅ App Store provisioning profile imported successfully")
+    else
+      UI.error("❌ No App Store provisioning profile found in environment variables")
+      UI.error("Please ensure APP_STORE_PROFILE_BASE64 is set")
+      raise "Missing App Store provisioning profile configuration"
+    end
 
     UI.success("✅ Code signing setup complete!")
   end
