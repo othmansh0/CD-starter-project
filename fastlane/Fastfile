@@ -85,7 +85,7 @@ platform :ios do
       UI.success("✅ Build successful with manual signing!")
       
       # If build is successful, proceed to upload
-      upload_to_testflight
+      upload_tf
 
     rescue => e
       UI.error("❌ Manual signing failed: #{e.message}")
@@ -125,11 +125,11 @@ platform :ios do
     UI.success("✅ Build successful with cloud signing!")
 
     # If build is successful, proceed to upload
-    upload_to_testflight
+    upload_tf
   end
   
   # --- Upload Lane ---
-  private_lane :upload_to_testflight do
+  private_lane :upload_tf do
     UI.header("🚀 Uploading to TestFlight...")
     setup_api_key # Ensure API key is set for upload
     
@@ -206,6 +206,19 @@ platform :ios do
     
     # Return the path for later use
     profile_path
+  end
+
+  # ---------------------------------------------------------------------------
+  # Testing lane expected by CI workflow
+  # ---------------------------------------------------------------------------
+  desc "Run unit tests"
+  lane :test do
+    run_tests(
+      project: "CD starter project.xcodeproj",
+      scheme: "CD starter project",
+      clean: true,
+      device: "iPhone 15"
+    )
   end
 
 end
