@@ -74,9 +74,11 @@ platform :ios do
       clean: true,
       export_method: "app-store",
       include_bitcode: false,
+      xcargs: "CODE_SIGN_STYLE=Manual",
       export_options: {
         method: "app-store",
-        compileBitcode: false
+        compileBitcode: false,
+        signingStyle: "manual"
       }
     )
 
