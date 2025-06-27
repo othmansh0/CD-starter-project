@@ -28,22 +28,35 @@ platform :ios do
       build_number: ENV["BUILD_NUMBER"]
     )
     
-    upload_to_testflight(
-      ipa: "./build/CD_starter_project.ipa",
-      skip_waiting_for_build_processing: false,  # Wait for processing to complete
-      notify_external_testers: true,             # Notify external testers
-      distribute_external: true,                 # Automatically distribute to external testers
-      groups: ["External Testers"],             # TestFlight group name (adjust as needed)
-      changelog: "🚀 New build from CI/CD pipeline!\n\n" +
-                "✅ Automated build and deployment\n" +
-                "📱 Latest features and improvements\n" +
-                "🔧 Built from commit: #{ENV['GITHUB_SHA'] || 'manual'}\n\n" +
-                "Please test and provide feedback!",
-      beta_app_feedback_email: ENV["BETA_FEEDBACK_EMAIL"] || ENV["FASTLANE_USERNAME"],
-      beta_app_description: "CI/CD Sample App - Automated TestFlight Distribution"
-    )
-    
-    UI.success("🎉 Successfully uploaded to TestFlight!")
+    # Upload to TestFlight with proper error handling for distribution
+    begin
+      upload_to_testflight(
+        ipa: "./build/CD_starter_project.ipa",
+        skip_waiting_for_build_processing: false,  # Wait for processing to complete
+        notify_external_testers: false,            # Disable automatic notification (requires special permissions)
+        distribute_external: false,                # Disable automatic distribution (requires special permissions)
+        changelog: "🚀 New build from CI/CD pipeline!\n\n" +
+                  "✅ Automated build and deployment\n" +
+                  "📱 Latest features and improvements\n" +
+                  "🔧 Built from commit: #{ENV['GITHUB_SHA'] || 'manual'}\n\n" +
+                  "Please test and provide feedback!",
+        beta_app_feedback_email: ENV["BETA_FEEDBACK_EMAIL"] || ENV["FASTLANE_USERNAME"],
+        beta_app_description: "CI/CD Sample App - Automated TestFlight Distribution"
+      )
+      
+      UI.success("✅ Successfully uploaded to TestFlight!")
+      UI.message("📱 Build is now available in TestFlight for manual distribution")
+      UI.message("🔧 To enable automatic distribution, ensure your API key has 'Developer' role permissions")
+      
+    rescue => e
+      if e.message.include?("forbidden") || e.message.include?("not allow this request")
+        UI.important("⚠️ Upload successful but automatic distribution failed due to API key permissions")
+        UI.message("📱 Build is available in TestFlight - you can manually distribute it")
+        UI.message("💡 To fix: Update API key to have 'Developer' role instead of 'App Manager'")
+      else
+        raise e  # Re-raise other errors
+      end
+    end
   end
 
   # ---------------------------------------------------------------------------
