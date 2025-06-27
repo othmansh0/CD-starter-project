@@ -60,6 +60,9 @@ platform :ios do
       increment_version_number(version_number: version_number)
     end
     
+    # Setup App Store Connect API key first (needed for TestFlight API calls)
+    setup_api_key
+    
     # Get the latest build number from TestFlight and increment
     UI.message("🔢 Getting latest build number from TestFlight...")
     begin
@@ -75,9 +78,6 @@ platform :ios do
       UI.message("🔢 Using local increment as fallback...")
       increment_build_number
     end
-
-    # Setup App Store Connect API key
-    setup_api_key
 
     # Setup certificates and provisioning profiles using manual import
     profile_uuid = setup_code_signing(
