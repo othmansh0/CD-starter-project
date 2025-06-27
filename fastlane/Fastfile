@@ -28,35 +28,24 @@ platform :ios do
       build_number: ENV["BUILD_NUMBER"]
     )
     
-    # Upload to TestFlight with automatic distribution and build number conflict handling
+    # Upload to TestFlight using Almosafer's exact approach
     begin
-      upload_to_testflight(
-        ipa: "./build/CD_starter_project.ipa",
-        skip_waiting_for_build_processing: false,  # Wait for processing to complete
-        notify_external_testers: true,             # Automatically notify external testers
-        distribute_external: true,                 # Automatically distribute to external testers
-        groups: ["External Testers"],             # TestFlight group name (create this group in App Store Connect)
+      testflight(
+        username: ENV["FASTLANE_USERNAME"],
+        skip_waiting_for_build_processing: true,
         changelog: "🚀 New build from CI/CD pipeline!\n\n" +
                   "✅ Automated build and deployment\n" +
                   "📱 Latest features and improvements\n" +
                   "🔧 Built from commit: #{ENV['GITHUB_SHA'] || 'manual'}\n\n" +
-                  "Please test and provide feedback!",
-        beta_app_feedback_email: ENV["BETA_FEEDBACK_EMAIL"] || ENV["FASTLANE_USERNAME"],
-        beta_app_description: "CI/CD Sample App - Automated TestFlight Distribution"
+                  "Please test and provide feedback!"
       )
       
-      UI.success("🎉 Successfully uploaded and distributed to TestFlight!")
-      UI.message("📧 External testers have been automatically notified")
-      UI.message("📱 Testers can now install the latest build directly")
+      UI.success("🎉 Successfully uploaded to TestFlight!")
+      UI.message("📱 Build is now available for internal testers automatically")
+      UI.message("💡 For external testers, manually distribute from App Store Connect")
       
     rescue => e
-      if e.message.include?("forbidden") || e.message.include?("not allow this request")
-        UI.error("❌ Automatic distribution failed - API key needs 'Developer' role permissions")
-        UI.message("📱 Build uploaded successfully but requires manual distribution")
-        UI.message("🔧 Fix: Update your App Store Connect API key role to 'Developer'")
-        UI.message("💡 Then re-run the pipeline for full automation")
-        UI.important("⚠️ Upload completed - manual distribution required")
-      elsif e.message.include?("bundle version must be higher") || e.message.include?("already been used")
+      if e.message.include?("bundle version must be higher") || e.message.include?("already been used")
         UI.error("❌ Build number conflict detected")
         UI.message("📱 This can happen due to TestFlight API delays or concurrent builds")
         UI.message("🔧 The build number #{ENV['BUILD_NUMBER'] || 'unknown'} already exists in TestFlight")
