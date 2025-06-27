@@ -55,23 +55,13 @@ platform :ios do
         UI.message("📱 Build uploaded successfully but requires manual distribution")
         UI.message("🔧 Fix: Update your App Store Connect API key role to 'Developer'")
         UI.message("💡 Then re-run the pipeline for full automation")
-        
-        # Fallback: Upload without distribution
-        upload_to_testflight(
-          ipa: "./build/CD_starter_project.ipa",
-          skip_waiting_for_build_processing: false,
-          notify_external_testers: false,
-          distribute_external: false,
-          changelog: "🚀 New build from CI/CD pipeline!\n\n" +
-                    "✅ Automated build and deployment\n" +
-                    "📱 Latest features and improvements\n" +
-                    "🔧 Built from commit: #{ENV['GITHUB_SHA'] || 'manual'}\n\n" +
-                    "Please test and provide feedback!",
-          beta_app_feedback_email: ENV["BETA_FEEDBACK_EMAIL"] || ENV["FASTLANE_USERNAME"],
-          beta_app_description: "CI/CD Sample App - Automated TestFlight Distribution"
-        )
-        
         UI.important("⚠️ Upload completed - manual distribution required")
+      elsif e.message.include?("bundle version must be higher") || e.message.include?("already been used")
+        UI.error("❌ Build number conflict detected")
+        UI.message("📱 This can happen due to TestFlight API delays or concurrent builds")
+        UI.message("🔧 The build number #{ENV['BUILD_NUMBER'] || 'unknown'} already exists in TestFlight")
+        UI.message("💡 Next build will use a higher number automatically")
+        UI.important("⚠️ Build number conflict - please retry the build")
       else
         raise e  # Re-raise other errors
       end
@@ -259,10 +249,10 @@ platform :ios do
   end
 
   # ---------------------------------------------------------------------------
-  # Build number bump using Almosafer's proven approach
+  # Build number bump with race condition handling
   # ---------------------------------------------------------------------------
   private_lane :bump_testflight_build_number do
-    UI.message("Fetching latest TestFlight build number across all versions...")
+    UI.message("Fetching latest TestFlight build number with race condition protection...")
 
     # Ensure API key is set up first
     setup_api_key
@@ -275,8 +265,10 @@ platform :ios do
         app_identifier: ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project"
       )
       
-      bumped_build_number = build_number.to_i + 1
-      UI.message("📈 Latest TestFlight build: #{build_number}, incrementing to: #{bumped_build_number}")
+      # Add buffer of 2 to handle TestFlight API delays and race conditions
+      # This ensures we skip potentially conflicting build numbers
+      bumped_build_number = build_number.to_i + 2
+      UI.message("📈 Latest TestFlight build: #{build_number}, using build number: #{bumped_build_number} (with race condition buffer)")
     rescue => e
       UI.message("⚠️ Could not fetch latest build number from TestFlight: #{e.message}")
       UI.message("🔢 Using timestamp-based build number as fallback...")
