@@ -28,7 +28,7 @@ platform :ios do
       build_number: ENV["BUILD_NUMBER"]
     )
     
-    # Upload to TestFlight with automatic distribution
+    # Upload to TestFlight with automatic distribution and build number conflict handling
     begin
       upload_to_testflight(
         ipa: "./build/CD_starter_project.ipa",
@@ -95,20 +95,14 @@ platform :ios do
     # Setup App Store Connect API key first (needed for TestFlight API calls)
     setup_api_key
     
-    # Get the latest build number from TestFlight and increment
-    UI.message("🔢 Getting latest build number from TestFlight...")
-    begin
-      latest_build = latest_testflight_build_number(
-        app_identifier: app_identifier,
-        initial_build_number: 0
-      )
-      new_build_number = latest_build + 1
-      UI.message("📈 Latest TestFlight build: #{latest_build}, incrementing to: #{new_build_number}")
+    # Set build number using Almosafer's proven approach
+    if build_number
+      UI.message("🔢 Using provided build number: #{build_number}")
+      increment_build_number(build_number: build_number)
+    else
+      UI.message("🔢 Fetching latest TestFlight build number...")
+      new_build_number = bump_testflight_build_number
       increment_build_number(build_number: new_build_number)
-    rescue => e
-      UI.message("⚠️ Could not fetch latest build number from TestFlight: #{e.message}")
-      UI.message("🔢 Using local increment as fallback...")
-      increment_build_number
     end
 
     # Setup certificates and provisioning profiles using manual import
@@ -261,6 +255,34 @@ platform :ios do
       UI.success("✅ App Store Connect API key setup successful")
     else
       UI.message("⚠️ App Store Connect API key not configured (missing environment variables)")
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Build number bump using Almosafer's proven approach
+  # ---------------------------------------------------------------------------
+  private_lane :bump_testflight_build_number do
+    UI.message("Fetching latest TestFlight build number across all versions...")
+
+    # Ensure API key is set up first
+    setup_api_key
+    
+    begin
+      # Get latest build number across ALL versions (don't specify version parameter)
+      build_number = latest_testflight_build_number(
+        app_identifier: ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project"
+      )
+      
+      bumped_build_number = build_number.to_i + 1
+      UI.message("📈 Latest TestFlight build: #{build_number}, incrementing to: #{bumped_build_number}")
+      
+      return bumped_build_number
+    rescue => e
+      UI.message("⚠️ Could not fetch latest build number from TestFlight: #{e.message}")
+      UI.message("🔢 Using timestamp-based build number as fallback...")
+      # Use timestamp-based build number to ensure uniqueness
+      timestamp_build = Time.now.strftime("%Y%m%d%H%M")
+      return timestamp_build.to_i
     end
   end
 
