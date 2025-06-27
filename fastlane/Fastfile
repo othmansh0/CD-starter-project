@@ -28,13 +28,14 @@ platform :ios do
       build_number: ENV["BUILD_NUMBER"]
     )
     
-    # Upload to TestFlight with proper error handling for distribution
+    # Upload to TestFlight with automatic distribution
     begin
       upload_to_testflight(
         ipa: "./build/CD_starter_project.ipa",
         skip_waiting_for_build_processing: false,  # Wait for processing to complete
-        notify_external_testers: false,            # Disable automatic notification (requires special permissions)
-        distribute_external: false,                # Disable automatic distribution (requires special permissions)
+        notify_external_testers: true,             # Automatically notify external testers
+        distribute_external: true,                 # Automatically distribute to external testers
+        groups: ["External Testers"],             # TestFlight group name (create this group in App Store Connect)
         changelog: "🚀 New build from CI/CD pipeline!\n\n" +
                   "✅ Automated build and deployment\n" +
                   "📱 Latest features and improvements\n" +
@@ -44,15 +45,33 @@ platform :ios do
         beta_app_description: "CI/CD Sample App - Automated TestFlight Distribution"
       )
       
-      UI.success("✅ Successfully uploaded to TestFlight!")
-      UI.message("📱 Build is now available in TestFlight for manual distribution")
-      UI.message("🔧 To enable automatic distribution, ensure your API key has 'Developer' role permissions")
+      UI.success("🎉 Successfully uploaded and distributed to TestFlight!")
+      UI.message("📧 External testers have been automatically notified")
+      UI.message("📱 Testers can now install the latest build directly")
       
     rescue => e
       if e.message.include?("forbidden") || e.message.include?("not allow this request")
-        UI.important("⚠️ Upload successful but automatic distribution failed due to API key permissions")
-        UI.message("📱 Build is available in TestFlight - you can manually distribute it")
-        UI.message("💡 To fix: Update API key to have 'Developer' role instead of 'App Manager'")
+        UI.error("❌ Automatic distribution failed - API key needs 'Developer' role permissions")
+        UI.message("📱 Build uploaded successfully but requires manual distribution")
+        UI.message("🔧 Fix: Update your App Store Connect API key role to 'Developer'")
+        UI.message("💡 Then re-run the pipeline for full automation")
+        
+        # Fallback: Upload without distribution
+        upload_to_testflight(
+          ipa: "./build/CD_starter_project.ipa",
+          skip_waiting_for_build_processing: false,
+          notify_external_testers: false,
+          distribute_external: false,
+          changelog: "🚀 New build from CI/CD pipeline!\n\n" +
+                    "✅ Automated build and deployment\n" +
+                    "📱 Latest features and improvements\n" +
+                    "🔧 Built from commit: #{ENV['GITHUB_SHA'] || 'manual'}\n\n" +
+                    "Please test and provide feedback!",
+          beta_app_feedback_email: ENV["BETA_FEEDBACK_EMAIL"] || ENV["FASTLANE_USERNAME"],
+          beta_app_description: "CI/CD Sample App - Automated TestFlight Distribution"
+        )
+        
+        UI.important("⚠️ Upload completed - manual distribution required")
       else
         raise e  # Re-raise other errors
       end
