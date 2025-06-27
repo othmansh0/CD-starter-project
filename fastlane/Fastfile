@@ -60,9 +60,21 @@ platform :ios do
       increment_version_number(version_number: version_number)
     end
     
-    # Always increment build number to ensure unique TestFlight uploads
-    UI.message("🔢 Auto-incrementing build number...")
-    increment_build_number
+    # Get the latest build number from TestFlight and increment
+    UI.message("🔢 Getting latest build number from TestFlight...")
+    begin
+      latest_build = latest_testflight_build_number(
+        app_identifier: app_identifier,
+        initial_build_number: 0
+      )
+      new_build_number = latest_build + 1
+      UI.message("📈 Latest TestFlight build: #{latest_build}, incrementing to: #{new_build_number}")
+      increment_build_number(build_number: new_build_number)
+    rescue => e
+      UI.message("⚠️ Could not fetch latest build number from TestFlight: #{e.message}")
+      UI.message("🔢 Using local increment as fallback...")
+      increment_build_number
+    end
 
     # Setup App Store Connect API key
     setup_api_key
