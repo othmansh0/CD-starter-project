@@ -267,6 +267,8 @@ platform :ios do
     # Ensure API key is set up first
     setup_api_key
     
+    bumped_build_number = nil
+    
     begin
       # Get latest build number across ALL versions (don't specify version parameter)
       build_number = latest_testflight_build_number(
@@ -275,15 +277,15 @@ platform :ios do
       
       bumped_build_number = build_number.to_i + 1
       UI.message("📈 Latest TestFlight build: #{build_number}, incrementing to: #{bumped_build_number}")
-      
-      return bumped_build_number
     rescue => e
       UI.message("⚠️ Could not fetch latest build number from TestFlight: #{e.message}")
       UI.message("🔢 Using timestamp-based build number as fallback...")
       # Use timestamp-based build number to ensure uniqueness
       timestamp_build = Time.now.strftime("%Y%m%d%H%M")
-      return timestamp_build.to_i
+      bumped_build_number = timestamp_build.to_i
     end
+    
+    bumped_build_number
   end
 
   # ---------------------------------------------------------------------------
