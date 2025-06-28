@@ -21,7 +21,7 @@ struct ContentView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
             HStack(spacing: 20) {
-                Button("➕ Increment🐸") {
+                Button("➕ Increment") {
                     viewModel.increment()
                 }
                 .buttonStyle(.borderedProminent)
