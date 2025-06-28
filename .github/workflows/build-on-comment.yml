@@ -12,17 +12,6 @@ permissions:
   contents: read
 
 jobs:
-  debug-build-comment:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug comment event
-        run: |
-          echo "Event: ${{ github.event_name }}"
-          echo "Issue number: ${{ github.event.issue.number }}"
-          echo "Comment body: ${{ github.event.comment.body }}"
-          echo "Is pull request: ${{ github.event.issue.pull_request != null }}"
-          echo "Pull request URL: ${{ github.event.issue.pull_request }}"
-          
   build-comment:
     if: github.event.issue.pull_request != null && (contains(github.event.comment.body, '/build') || contains(github.event.comment.body, '/diagnostic') || contains(github.event.comment.body, '/permissions') || contains(github.event.comment.body, '/setup') || contains(github.event.comment.body, '/test') || contains(github.event.comment.body, '/certificates') || contains(github.event.comment.body, '/appstore'))
     runs-on: macos-15
@@ -171,28 +160,7 @@ jobs:
           echo "=== Installed Fastlane Version ==="
           bundle exec fastlane --version
 
-      - name: Debug Environment Before Build
-        run: |
-          echo "=== Build Configuration ==="
-          echo "Build type: ${{ steps.build_type.outputs.type }}"
-          echo "Fastlane lane: ${{ steps.build_type.outputs.lane }}"
-          echo "Description: ${{ steps.build_type.outputs.description }}"
-          echo ""
-          echo "=== Working Directory ==="
-          pwd
-          ls -la
-          echo ""
-          echo "=== Fastfile Content ==="
-          cat fastlane/Fastfile
-          echo ""
-          echo "=== Environment Variables ==="
-          echo "API_KEY_ID: ${API_KEY_ID:+SET}"
-          echo "API_ISSUER_ID: ${API_ISSUER_ID:+SET}"
-          echo "API_KEY_BASE64: ${API_KEY_BASE64:+SET}"
-        env:
-          API_KEY_ID: ${{ secrets.API_KEY_ID }}
-          API_ISSUER_ID: ${{ secrets.API_ISSUER_ID }}
-          API_KEY_BASE64: ${{ secrets.API_KEY_BASE64 }}
+
 
       - name: Create AuthKey.p8 file for Xcode authentication
         run: |
