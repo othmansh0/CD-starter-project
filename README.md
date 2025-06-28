@@ -2,7 +2,6 @@
 
 A production-ready iOS calculator app with fully automated CI/CD pipeline for TestFlight deployment.
 
-
 ## iOS CI/CD Pipeline
 
 This project demonstrates a **complete, working iOS CI/CD setup** using GitHub Actions and Fastlane. The pipeline has been battle-tested and includes solutions for common iOS deployment challenges.
@@ -139,9 +138,7 @@ graph TD
 ```
 
 
-
 ### Local Development
-
 #### Quick Start
 ```bash
 # Install dependencies
@@ -206,7 +203,6 @@ bundle exec fastlane build_and_upload
 - **Fastlane tests**: `bundle exec fastlane test`
 
 
-
 ## Contributing
 
 1. **Create feature branch** from `develop`
@@ -215,5 +211,3 @@ bundle exec fastlane build_and_upload
 4. **Test with `/diagnostic`** to verify CI
 5. **Deploy with `/build`** for TestFlight
 6. **Merge** when ready
-
- 
