@@ -10,7 +10,7 @@ This project demonstrates a **complete, working iOS CI/CD setup** using GitHub A
 
 - **TestFlight Auto Distribution**: Fixed API key permission issues
 - **Missing Compliance Resolution**: Automatic export compliance handling
-- **Build Number Management**: Race condition protection with buffer system
+- **Build Number Management**: Automatic increment following standard approach
 - **Certificate Management**: Works with Developer role permissions
 - **Branch Protection**: Comprehensive conflict resolution
 
@@ -85,12 +85,12 @@ testflight(
 
 #### 🔧 **Build Number Management**
 
-Intelligent build number handling with race condition protection:
+Automatic build number increment following standard approach:
 
 ```ruby
-# Fetch latest + buffer for API delays
+# Fetch latest and increment by 1
 latest_build = latest_testflight_build_number()
-new_build = latest_build + 2  # Buffer for race conditions
+new_build = latest_build + 1  # Standard increment
 ```
 
 #### 📋 **Export Compliance Automation**
@@ -137,8 +137,8 @@ graph TD
     I --> J[Auto-Available to Internal Testers]
 ```
 
-### Local Development
 
+### Local Development
 #### Quick Start
 ```bash
 # Install dependencies
@@ -202,6 +202,7 @@ bundle exec fastlane build_and_upload
 - **UI tests**: `CD starter projectUITests`
 - **Fastlane tests**: `bundle exec fastlane test`
 
+
 ## Contributing
 
 1. **Create feature branch** from `develop`
@@ -209,4 +210,4 @@ bundle exec fastlane build_and_upload
 3. **Create Pull Request**
 4. **Test with `/diagnostic`** to verify CI
 5. **Deploy with `/build`** for TestFlight
-6. **Merge** when ready 
+6. **Merge** when ready
