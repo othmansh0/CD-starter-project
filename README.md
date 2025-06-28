@@ -19,7 +19,7 @@ This project demonstrates a **complete, working iOS CI/CD setup** using GitHub A
 
 - **TestFlight Auto Distribution**: Fixed API key permission issues
 - **Missing Compliance Resolution**: Automatic export compliance handling
-- **Build Number Management**: Race condition protection with buffer system
+- **Build Number Management**: Automatic increment following standard approach
 - **Certificate Management**: Works with Developer role permissions
 - **Branch Protection**: Comprehensive conflict resolution
 
@@ -94,12 +94,12 @@ testflight(
 
 #### 🔧 **Build Number Management**
 
-Intelligent build number handling with race condition protection:
+Automatic build number increment following standard approach:
 
 ```ruby
-# Fetch latest + buffer for API delays
+# Fetch latest and increment by 1
 latest_build = latest_testflight_build_number()
-new_build = latest_build + 2  # Buffer for race conditions
+new_build = latest_build + 1  # Standard increment
 ```
 
 #### 📋 **Export Compliance Automation**
@@ -138,7 +138,7 @@ graph TD
     A[PR Comment /build] --> B[Setup CI Environment]
     B --> C[Setup API Key]
     C --> D[Fetch Latest Build Number]
-    D --> E[Add Race Condition Buffer]
+    D --> E[Increment Build Number]
     E --> F[Setup Code Signing]
     F --> G[Build Archive]
     G --> H[Export with Compliance]
@@ -157,8 +157,8 @@ These common issues have been **permanently fixed** in our setup:
 - **Result**: Builds automatically available to testers
 
 **❌ "Build number already exists"**
-- **Fixed**: Race condition buffer (+2) and timestamp fallback
-- **Result**: No more build number conflicts
+- **Fixed**: Standard increment (+1) with timestamp fallback
+- **Result**: Proper build number progression
 
 **❌ "API key permission denied"**
 - **Fixed**: Using `testflight()` instead of `upload_to_testflight()`
@@ -270,7 +270,7 @@ bundle exec fastlane build_and_upload
 
 This setup has successfully resolved:
 
-- ✅ **TestFlight build number conflicts** (race conditions)
+- ✅ **TestFlight build number management** (standard increment)
 - ✅ **Missing compliance blocking distribution**
 - ✅ **API key permission limitations**
 - ✅ **Certificate management complexity**
