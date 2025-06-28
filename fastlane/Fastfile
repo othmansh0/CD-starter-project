@@ -238,10 +238,10 @@ platform :ios do
   end
 
   # ---------------------------------------------------------------------------
-  # Build number bump with race condition handling
+  # Build number bump following standard approach
   # ---------------------------------------------------------------------------
   private_lane :bump_testflight_build_number do
-    UI.message("Fetching latest TestFlight build number with race condition protection...")
+    UI.message("Fetching latest TestFlight build number...")
 
     # Ensure API key is set up first
     setup_api_key
@@ -254,10 +254,9 @@ platform :ios do
         app_identifier: ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project"
       )
       
-      # Add buffer of 2 to handle TestFlight API delays and race conditions
-      # This ensures we skip potentially conflicting build numbers
-      bumped_build_number = build_number.to_i + 2
-      UI.message("📈 Latest TestFlight build: #{build_number}, using build number: #{bumped_build_number} (with race condition buffer)")
+      # Increment by 1 (standard approach)
+      bumped_build_number = build_number.to_i + 1
+      UI.message("📈 Latest TestFlight build: #{build_number}, using build number: #{bumped_build_number}")
     rescue => e
       UI.message("⚠️ Could not fetch latest build number from TestFlight: #{e.message}")
       UI.message("🔢 Using timestamp-based build number as fallback...")
