@@ -128,12 +128,13 @@ Handles various certificate scenarios gracefully:
 graph TD
     A[PR Comment /build] --> B[Setup CI Environment]
     B --> C[Setup API Key]
-    C --> D[Fetch Latest Build Number + Buffer]
-    D --> E[Setup Code Signing]
-    E --> F[Build Archive]
-    F --> G[Export with Compliance Settings]
-    G --> H[Upload to TestFlight]
-    H --> I[Auto-Available to Internal Testers]
+    C --> D[Fetch Latest Build Number]
+    D --> E[Increment Build Number]
+    E --> F[Setup Code Signing]
+    F --> G[Build Archive]
+    G --> H[Export with Compliance]
+    H --> I[Upload to TestFlight]
+    I --> J[Auto-Available to Internal Testers]
 ```
 
 ### Local Development
