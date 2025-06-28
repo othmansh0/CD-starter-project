@@ -2,14 +2,6 @@
 
 A production-ready iOS calculator app with fully automated CI/CD pipeline for TestFlight deployment.
 
-## Features
-
-- Basic calculator operations (add, subtract, multiply, divide, power)
-- Modern SwiftUI interface with emojis and styling
-- **Fully automated CI/CD pipeline** with TestFlight integration
-- **Comment-triggered builds** via GitHub Actions
-- **Automatic TestFlight distribution** to internal testers
-- **Export compliance handling** for seamless App Store submission
 
 ## iOS CI/CD Pipeline
 
@@ -146,60 +138,7 @@ graph TD
     I --> J[Auto-Available to Internal Testers]
 ```
 
-### Troubleshooting
 
-#### ✅ **Resolved Issues**
-
-These common issues have been **permanently fixed** in our setup:
-
-**❌ "Missing Compliance" Dialog**
-- **Fixed**: Custom Info.plist with proper export compliance
-- **Result**: Builds automatically available to testers
-
-**❌ "Build number already exists"**
-- **Fixed**: Standard increment (+1) with timestamp fallback
-- **Result**: Proper build number progression
-
-**❌ "API key permission denied"**
-- **Fixed**: Using `testflight()` instead of `upload_to_testflight()`
-- **Result**: Works with Developer role permissions
-
-**❌ "UserInterfaceState.xcuserstate conflicts"**
-- **Fixed**: Comprehensive `.gitignore` for iOS projects
-- **Result**: Clean PRs without merge conflicts
-
-#### 🛠 **Diagnostic Commands**
-
-If you encounter issues, use these commands to identify the problem:
-
-```bash
-# Test your API key permissions
-/permissions
-
-# Verify CI pipeline works (always succeeds)
-/diagnostic  
-
-# Test complete pipeline without upload
-/test
-
-# Create missing provisioning profiles
-/setup
-
-# Check available certificates
-/certificates
-
-# Full production build
-/build
-```
-
-#### Permission Requirements
-
-| Build Type | Required Role | Auto Distribution | Manual Distribution |
-|------------|---------------|-------------------|-------------------|
-| Development | Developer | ✅ Works | N/A |
-| TestFlight Internal | Developer | ✅ Automatic | N/A |
-| TestFlight External | Developer | ❌ Manual Only | ✅ App Store Connect |
-| App Store | Developer | ❌ Manual Only | ✅ App Store Connect |
 
 ### Local Development
 
@@ -228,7 +167,7 @@ bundle exec fastlane build_and_upload
 - ✅ **No sensitive data logging**
 - ✅ **Proper keychain management** in CI
 - ✅ **Branch protection** with conflict resolution
-- ✅ **Comprehensive `.gitignore** for iOS projects
+- ✅ **Comprehensive `.gitignore`** for iOS projects
 
 ### Project Structure
 
@@ -266,16 +205,7 @@ bundle exec fastlane build_and_upload
 - **UI tests**: `CD starter projectUITests`
 - **Fastlane tests**: `bundle exec fastlane test`
 
-## Success Stories
 
-This setup has successfully resolved:
-
-- ✅ **TestFlight build number management** (standard increment)
-- ✅ **Missing compliance blocking distribution**
-- ✅ **API key permission limitations**
-- ✅ **Certificate management complexity**
-- ✅ **PR merge conflicts from Xcode files**
-- ✅ **Manual export compliance submission**
 
 ## Contributing
 
@@ -286,10 +216,4 @@ This setup has successfully resolved:
 5. **Deploy with `/build`** for TestFlight
 6. **Merge** when ready
 
-## Inspiration
-
-This setup incorporates proven patterns from **Almosafer's production iOS CI/CD pipeline**, adapted for general use with comprehensive documentation and troubleshooting guides.
-
-## License
-
-This project is for demonstration and educational purposes. 
+ 
