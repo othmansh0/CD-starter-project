@@ -13,41 +13,15 @@ permissions:
 
 jobs:
   build-comment:
-    if: github.event.issue.pull_request != null && (contains(github.event.comment.body, '/build') || contains(github.event.comment.body, '/diagnostic') || contains(github.event.comment.body, '/permissions') || contains(github.event.comment.body, '/setup') || contains(github.event.comment.body, '/test') || contains(github.event.comment.body, '/certificates') || contains(github.event.comment.body, '/appstore'))
+    if: github.event.issue.pull_request != null && contains(github.event.comment.body, '/build')
     runs-on: macos-15
     steps:
       - name: Determine build type
         id: build_type
         run: |
-          if [[ "${{ github.event.comment.body }}" == *"/setup"* ]]; then
-            echo "type=setup" >> $GITHUB_OUTPUT
-            echo "lane=setup_profiles" >> $GITHUB_OUTPUT
-            echo "description=🔧 Setup Provisioning Profiles" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.comment.body }}" == *"/appstore"* ]]; then
-            echo "type=appstore" >> $GITHUB_OUTPUT
-            echo "lane=setup_app_store_profile" >> $GITHUB_OUTPUT
-            echo "description=🏪 Create App Store Profile Only" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.comment.body }}" == *"/certificates"* ]]; then
-            echo "type=certificates" >> $GITHUB_OUTPUT
-            echo "lane=check_certificates" >> $GITHUB_OUTPUT
-            echo "description=🔍 Check Available Certificates" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.comment.body }}" == *"/permissions"* ]]; then
-            echo "type=permissions" >> $GITHUB_OUTPUT
-            echo "lane=diagnostic_api_permissions" >> $GITHUB_OUTPUT
-            echo "description=🔍 API Key Permissions Diagnostic" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.comment.body }}" == *"/diagnostic"* ]]; then
-            echo "type=diagnostic" >> $GITHUB_OUTPUT
-            echo "lane=diagnostic_dev_build" >> $GITHUB_OUTPUT
-            echo "description=🧪 Diagnostic Development build" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.comment.body }}" == *"/test"* ]]; then
-            echo "type=test" >> $GITHUB_OUTPUT
-            echo "lane=test_app_store_build" >> $GITHUB_OUTPUT
-            echo "description=🧪 Test App Store build pipeline" >> $GITHUB_OUTPUT
-          else
-            echo "type=regular" >> $GITHUB_OUTPUT
-            echo "lane=build_and_upload" >> $GITHUB_OUTPUT
-            echo "description=🚀 App Store build" >> $GITHUB_OUTPUT
-          fi
+          echo "type=regular" >> $GITHUB_OUTPUT
+          echo "lane=build_and_upload" >> $GITHUB_OUTPUT
+          echo "description=🚀 App Store build" >> $GITHUB_OUTPUT
 
       - name: Announce build start
         run: |
@@ -83,12 +57,6 @@ jobs:
       - name: Check test status
         id: check_tests
         run: |
-          # Skip test check for diagnostic builds
-          if [[ "${{ steps.build_type.outputs.type }}" == "diagnostic" || "${{ steps.build_type.outputs.type }}" == "permissions" || "${{ steps.build_type.outputs.type }}" == "setup" || "${{ steps.build_type.outputs.type }}" == "test" || "${{ steps.build_type.outputs.type }}" == "certificates" || "${{ steps.build_type.outputs.type }}" == "appstore" ]]; then
-            echo "🧪 Diagnostic/Setup/Test/Certificate build - skipping test validation"
-            exit 0
-          fi
-          
           # Get the PR's commit SHA
           PR_URL="${{ github.event.issue.pull_request.url }}"
           PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "$PR_URL")
@@ -182,79 +150,15 @@ jobs:
       - name: Announce success
         if: success()
         run: |
-          if [[ "${{ steps.build_type.outputs.type }}" == "setup" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"✅ 🔧 **SETUP COMPLETE!** Provisioning profiles created! 🎉\n\n**Next Steps:**\n1. Try `/build` for App Store build\n2. Try `/diagnostic` for Development build\n3. Both should now work with the new profiles!"}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          elif [[ "${{ steps.build_type.outputs.type }}" == "appstore" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"✅ 🏪 **APP STORE PROFILE CREATED!** 🎉\n\n**What this means:**\n- ✅ App Store provisioning profile created successfully\n- ✅ Should fix the \"No profiles found\" error\n\n**Next Steps:**\n1. Try `/build` - should work now!\n2. If still fails, try `/certificates` to check Distribution certificate"}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          elif [[ "${{ steps.build_type.outputs.type }}" == "certificates" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"✅ 🔍 **CERTIFICATE CHECK COMPLETE!** 🎉\n\nCheck the workflow logs to see:\n- 📋 All available certificates\n- 🏪 Distribution certificates count\n- 💡 What might be missing\n\n**Next Steps:**\n1. If Distribution certificates found, try `/appstore`\n2. If none found, create Distribution certificate manually"}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          elif [[ "${{ steps.build_type.outputs.type }}" == "permissions" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"✅ 🔍 **API Key Permissions Check Complete!** 🎉\n\nCheck the workflow logs to see which permissions your API key has. This will help identify what needs to be fixed for builds to work."}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          elif [[ "${{ steps.build_type.outputs.type }}" == "diagnostic" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"✅ 🧪 **DIAGNOSTIC SUCCESS!** Development build completed! 🎉\n\n**This proves:**\n- ✅ CI/CD pipeline works perfectly\n- ✅ API key authentication works\n- ✅ Automatic signing works\n- ❌ **Issue:** Apple Developer account lacks Distribution certificate permissions\n\n**Next Steps:**\n1. Request Admin or App Store Manager role\n2. Or ask Admin to create Distribution certificates\n3. Then use `/build` for App Store builds"}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          elif [[ "${{ steps.build_type.outputs.type }}" == "test" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"✅ 🧪 **TEST BUILD SUCCESS!** Full App Store pipeline test completed! 🎉\n\n**This proves:**\n- ✅ Complete CI/CD pipeline works perfectly\n- ✅ Archive phase succeeds (Release configuration)\n- ✅ Export phase works with Development method\n- ❌ **Only issue:** Distribution export blocked by permissions\n\n**Conclusion:** Your setup is perfect - just need Distribution certificate permissions!"}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          else
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -X POST \
-              -d '{"body":"✅ App Store build completed successfully! 🎉"}' \
+            -d '{"body":"✅ App Store build completed successfully! 🎉"}' \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          fi
 
       - name: Announce failure
         if: failure()
         run: |
-          if [[ "${{ steps.build_type.outputs.type }}" == "setup" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"❌ 🔧 Setup failed! Could not create provisioning profiles. Check the workflow logs for details."}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          elif [[ "${{ steps.build_type.outputs.type }}" == "appstore" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"❌ 🏪 App Store profile creation failed! This is likely because:\n\n**Possible causes:**\n1. ❌ No Distribution certificate available\n2. ❌ API key lacks permissions\n3. ❌ Bundle ID not registered\n\n**Next Steps:**\n1. Try `/certificates` to check available certificates\n2. Create Distribution certificate manually if needed"}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          elif [[ "${{ steps.build_type.outputs.type }}" == "certificates" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"❌ 🔍 Certificate check failed! This suggests API key permission issues. Check the workflow logs for details."}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          elif [[ "${{ steps.build_type.outputs.type }}" == "permissions" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"❌ 🔍 API Key permissions check failed! Check the workflow logs to see what permissions are missing."}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          elif [[ "${{ steps.build_type.outputs.type }}" == "diagnostic" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"❌ 🧪 Diagnostic build failed! This suggests a deeper configuration issue. Please check the workflow logs."}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          elif [[ "${{ steps.build_type.outputs.type }}" == "test" ]]; then
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"body":"❌ 🧪 Test build failed! This suggests a configuration issue beyond just permissions. Please check the workflow logs."}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
-          else
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -X POST \
-              -d '{"body":"❌ App Store build failed! Please check the workflow logs for details."}' \
+            -d '{"body":"❌ App Store build failed! Please check the workflow logs for details."}' \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" 
-          fi 

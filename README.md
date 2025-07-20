@@ -19,11 +19,6 @@ This project demonstrates a **complete, working iOS CI/CD setup** using GitHub A
 Comment on any Pull Request to trigger builds:
 
 - **`/build`** - Full App Store build and upload to TestFlight
-- **`/diagnostic`** - Development build to test CI pipeline
-- **`/permissions`** - Test API key permissions and capabilities
-- **`/setup`** - Create missing provisioning profiles
-- **`/test`** - Test complete App Store pipeline without distribution
-- **`/certificates`** - Check available certificates and signing identities
 
 ### Setup Requirements
 
@@ -117,10 +112,7 @@ Handles various certificate scenarios gracefully:
 | Lane | Purpose | When to Use |
 |------|---------|-------------|
 | `build_and_upload` | Complete App Store build → TestFlight | Production deployments |
-| `diagnostic_dev_build` | Development build test | CI pipeline verification |
-| `diagnostic_api_permissions` | API key capability check | Permission troubleshooting |
-| `setup_profiles` | Create missing profiles | Initial setup or profile issues |
-| `test` | Full pipeline test without upload | Pipeline validation |
+| `test` | Run unit tests | Local development and testing |
 
 #### Build Process Flow
 
@@ -144,8 +136,8 @@ graph TD
 # Install dependencies
 bundle install
 
-# Test your setup
-bundle exec fastlane diagnostic_api_permissions
+# Run tests
+bundle exec fastlane test
 
 # Build locally
 bundle exec fastlane build_and_upload
@@ -154,7 +146,7 @@ bundle exec fastlane build_and_upload
 #### Development Workflow
 1. **Clone repository**
 2. **Configure secrets** in GitHub
-3. **Test with `/diagnostic`** comment on PR
+3. **Create Pull Request** to develop or feature branch
 4. **Deploy with `/build`** comment on PR
 
 ### Security & Best Practices
@@ -207,6 +199,11 @@ bundle exec fastlane build_and_upload
 1. **Create feature branch** from `develop`
 2. **Make changes** and add tests
 3. **Create Pull Request**
+<<<<<<< HEAD
 4. **Test with `/diagnostic`** to verify CI
 5. **Deploy with `/build`** for TestFlight
 6. **Merge** when ready 
+=======
+4. **Deploy with `/build`** for TestFlight
+5. **Merge** when ready
+>>>>>>> 9b9b362 (feat: Simplify CI/CD to only support /build command)

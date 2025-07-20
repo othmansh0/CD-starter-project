@@ -282,27 +282,6 @@ platform :ios do
     )
   end
 
-  # ---------------------------------------------------------------------------
-  # Development helper lanes
-  # ---------------------------------------------------------------------------
-  desc "Setup certificates and profiles for development"
-  lane :setup_dev_signing do
-    setup_api_key
-    
-    setup_code_signing(
-      build_type: "development",
-      app_identifier: ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project"
-    )
-  end
 
-  desc "Setup certificates and profiles for App Store"
-  lane :setup_appstore_signing do
-    setup_api_key
-    
-    setup_code_signing(
-      build_type: "appstore",
-      app_identifier: ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project"
-    )
-  end
 
 end
