@@ -1,5 +1,14 @@
 name: Build on Comment
 
+# Emoji reactions on /build comments:
+# 🚀 - Build started
+# ✅ - Tests passed
+# 👀 - No tests found, proceeding
+# ❌ - Tests failed
+# 😕 - Invalid branch
+# 🎉 - Build succeeded
+# 😞 - Build failed
+
 on:
   issue_comment:
     types: [created]
@@ -23,12 +32,12 @@ jobs:
           echo "lane=build_and_upload" >> $GITHUB_OUTPUT
           echo "description=🚀 App Store build" >> $GITHUB_OUTPUT
 
-      - name: Announce build start
+      - name: React to build start
         run: |
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -X POST \
-            -d '{"body":"${{ steps.build_type.outputs.description }} triggered by comment! Starting process..."}' \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+            -d '{"content":"rocket"}' \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
 
       - name: Get PR info
         id: pr_info
@@ -48,8 +57,8 @@ jobs:
             echo "❌ Build can only be triggered from develop or feature branches. Current branch: $BRANCH"
             curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -X POST \
-              -d '{"body":"❌ Build can only be triggered from develop or feature branches. Current branch: '"$BRANCH"'"}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+              -d '{"content":"confused"}' \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
             exit 1
           fi
           echo "✅ Branch validation passed: $BRANCH"
@@ -76,17 +85,21 @@ jobs:
             echo "❌ Tests have failed. Build cannot proceed."
             curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -X POST \
-              -d '{"body":"❌ Tests have failed. Build cannot proceed."}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+              -d '{"content":"x"}' \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
             exit 1
           elif [[ "$TEST_STATUS" == "success" ]]; then
             echo "✅ Tests have passed, proceeding with build"
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -X POST \
+              -d '{"content":"white_check_mark"}' \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
           else
             echo "⚠️ No test results found or tests pending. Proceeding with build for testing purposes."
             curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -X POST \
-              -d '{"body":"⚠️ No test results found or tests pending. Proceeding with build for testing purposes."}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+              -d '{"content":"eyes"}' \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
           fi
 
       - name: Checkout PR Branch
@@ -147,18 +160,18 @@ jobs:
           APP_STORE_PROFILE_BASE64: ${{ secrets.APP_STORE_PROFILE_BASE64 }}
         run: bundle exec fastlane ${{ steps.build_type.outputs.lane }}
 
-      - name: Announce success
+      - name: React to success
         if: success()
         run: |
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -X POST \
-            -d '{"body":"✅ App Store build completed successfully! 🎉"}' \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments"
+            -d '{"content":"tada"}' \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
 
-      - name: Announce failure
+      - name: React to failure
         if: failure()
         run: |
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -X POST \
-            -d '{"body":"❌ App Store build failed! Please check the workflow logs for details."}' \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" 
+            -d '{"content":"disappointed"}' \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" 
