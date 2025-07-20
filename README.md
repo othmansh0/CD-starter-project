@@ -80,7 +80,7 @@ testflight(
 
 #### 🔧 **Build Number Management**
 
-Intelligent build number handling with race condition protection:
+Automatic build number increment following standard approach:
 
 ```ruby
 # Fetch latest and increment by 1
