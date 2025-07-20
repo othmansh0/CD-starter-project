@@ -1,13 +1,9 @@
 name: Build on Comment
 
-# Emoji reactions on /build comments:
-# 🚀 - Build started
-# ✅ - Tests passed
-# 👀 - No tests found, proceeding
-# ❌ - Tests failed
-# 😕 - Invalid branch
-# 🎉 - Build succeeded
-# 😞 - Build failed
+# Single emoji reaction on /build comments (replaces previous):
+# 👀 - Build in progress (waiting/processing)
+# 🚀 - Build succeeded
+# 😞 - Build failed (any reason: tests, wrong branch, build error)
 
 on:
   issue_comment:
@@ -36,7 +32,7 @@ jobs:
         run: |
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -X POST \
-            -d '{"content":"rocket"}' \
+            -d '{"content":"eyes"}' \
             "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
 
       - name: Get PR info
@@ -55,9 +51,13 @@ jobs:
           # Allow develop branch and feature branches for testing
           if [[ "$BRANCH" != "develop" && "$BRANCH" != feature/* ]]; then
             echo "❌ Build can only be triggered from develop or feature branches. Current branch: $BRANCH"
+            # Remove existing reactions and add failure reaction
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -X DELETE \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions/eyes"
             curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -X POST \
-              -d '{"content":"confused"}' \
+              -d '{"content":"disappointed"}' \
               "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
             exit 1
           fi
@@ -83,23 +83,21 @@ jobs:
           # For testing purposes, allow build even if no tests found or if tests are pending
           if [[ "$TEST_STATUS" == "failure" ]]; then
             echo "❌ Tests have failed. Build cannot proceed."
+            # Remove existing reactions and add failure reaction
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -X DELETE \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions/eyes"
             curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -X POST \
-              -d '{"content":"x"}' \
+              -d '{"content":"disappointed"}' \
               "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
             exit 1
           elif [[ "$TEST_STATUS" == "success" ]]; then
             echo "✅ Tests have passed, proceeding with build"
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"content":"white_check_mark"}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
+            # Keep eyes reaction for now - will be replaced by final result
           else
             echo "⚠️ No test results found or tests pending. Proceeding with build for testing purposes."
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -X POST \
-              -d '{"content":"eyes"}' \
-              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
+            # Keep eyes reaction for now - will be replaced by final result
           fi
 
       - name: Checkout PR Branch
@@ -163,14 +161,22 @@ jobs:
       - name: React to success
         if: success()
         run: |
+          # Remove existing reactions and add success reaction
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -X DELETE \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions/eyes"
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -X POST \
-            -d '{"content":"tada"}' \
+            -d '{"content":"rocket"}' \
             "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
 
       - name: React to failure
         if: failure()
         run: |
+          # Remove existing reactions and add failure reaction
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -X DELETE \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions/eyes"
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -X POST \
             -d '{"content":"disappointed"}' \
