@@ -180,11 +180,9 @@ platform :ios do
       # Install the provisioning profile
       install_provisioning_profile(path: profile_path)
       
-      # Extract UUID from the profile
-      require 'plist'
+      # Extract UUID from the profile (inline plist parsing)
       profile_data = `security cms -D -i "#{profile_path}"`
-      profile_plist = Plist.parse_xml(profile_data)
-      profile_uuid = profile_plist['UUID']
+      profile_uuid = profile_data.match(/\<key\>UUID\<\/key\>\s*\<string\>([A-F0-9-]+)\<\/string\>/)[1]
       UI.success("✅ App Store provisioning profile imported successfully (UUID: #{profile_uuid})")
       
       # Clean up temporary file
@@ -277,7 +275,7 @@ platform :ios do
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
       clean: true,
-      device: "iPhone 15",
+      device: ENV["TEST_DEVICE"] || "iPhone 15",
       only_testing: ["CD starter projectTests"]
     )
   end
