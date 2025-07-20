@@ -31,22 +31,6 @@ Build and upload the app to TestFlight
 
 Run unit tests
 
-### ios setup_dev_signing
-
-```sh
-[bundle exec] fastlane ios setup_dev_signing
-```
-
-Setup certificates and profiles for development
-
-### ios setup_appstore_signing
-
-```sh
-[bundle exec] fastlane ios setup_appstore_signing
-```
-
-Setup certificates and profiles for App Store
-
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
