@@ -18,6 +18,16 @@ This project demonstrates a **complete, working iOS CI/CD setup** using GitHub A
 
 Comment on any Pull Request to trigger builds:
 
+### Build Status Indicators
+
+The CI/CD pipeline provides real-time feedback through emoji reactions on your `/build` comment:
+
+- 👀 **In Progress** - Build is currently running
+- 🚀 **Success** - Build completed and uploaded to TestFlight
+- 😞 **Failed** - Build failed (tests, signing, or upload issues)
+
+Only one emoji appears at a time, automatically replacing the previous status.
+
 - **`/build`** - Full App Store build and upload to TestFlight
 
 ### Setup Requirements
@@ -41,6 +51,11 @@ API_KEY_BASE64      # Base64 encoded .p8 file content
 DEVELOPMENT_TEAM    # Apple Developer Team ID
 FASTLANE_USERNAME   # Your Apple ID email
 
+
+# Required - Code Signing
+DISTRIBUTION_CERTIFICATE    # Base64 encoded .p12 certificate
+DISTRIBUTION_PASSWORD       # Certificate password
+APP_STORE_PROFILE_BASE64    # Base64 encoded provisioning profile
 # Optional - For advanced certificate management
 MATCH_GIT_URL       # Git repository for certificate storage
 MATCH_PASSWORD      # Password for certificate encryption
@@ -118,15 +133,15 @@ Handles various certificate scenarios gracefully:
 
 ```mermaid
 graph TD
-    A[PR Comment /build] --> B[Setup CI Environment]
-    B --> C[Setup API Key]
+    A[PR Comment /build] --> B[👀 In Progress Reaction]
+    B --> C[Setup CI Environment]    B --> C[Setup API Key]
     C --> D[Fetch Latest Build Number]
     D --> E[Increment Build Number]
     E --> F[Setup Code Signing]
     F --> G[Build Archive]
     G --> H[Export with Compliance]
     H --> I[Upload to TestFlight]
-    I --> J[Auto-Available to Internal Testers]
+    I --> J[🚀 Success Reaction OR 😞 Failure Reaction]    I --> J[Auto-Available to Internal Testers]
 ```
 
 ### Local Development
