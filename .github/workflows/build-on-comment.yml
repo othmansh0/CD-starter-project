@@ -170,7 +170,6 @@ jobs:
           API_ISSUER_ID: ${{ secrets.API_ISSUER_ID }}
           API_KEY_BASE64: ${{ secrets.API_KEY_BASE64 }}
           DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
           DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
           DISTRIBUTION_PASSWORD: ${{ secrets.DISTRIBUTION_PASSWORD }}
           APP_STORE_PROFILE_BASE64: ${{ secrets.APP_STORE_PROFILE_BASE64 }}
