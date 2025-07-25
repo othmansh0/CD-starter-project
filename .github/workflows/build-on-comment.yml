@@ -21,13 +21,6 @@ jobs:
     if: github.event.issue.pull_request != null && contains(github.event.comment.body, '/build')
     runs-on: macos-15
     steps:
-      - name: Determine build type
-        id: build_type
-        run: |
-          echo "type=regular" >> $GITHUB_OUTPUT
-          echo "lane=build_and_upload" >> $GITHUB_OUTPUT
-          echo "description=🚀 App Store build" >> $GITHUB_OUTPUT
-
       - name: React to build start
         run: |
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -135,25 +128,10 @@ jobs:
 
       - name: Force Clean Fastlane Setup
         run: |
-          # Remove any existing Fastlane installations
-          gem uninstall fastlane --all --force || true
-          gem uninstall fastlane-sirp --all --force || true
-          
-          # Clear all caches
-          rm -rf ~/.fastlane
-          rm -rf /tmp/fastlane*
-          rm -f AuthKey.p8
-          rm -f .env
-          rm -f fastlane/.env
+          # Only clean what's necessary
           rm -rf vendor/bundle
-          rm -f Gemfile.lock
-          
-          # Install bundler and gems fresh
           gem install bundler --no-document
-          bundle config --local path vendor/bundle
-          bundle config --local clean true
           bundle install --verbose
-          
           echo "=== Installed Fastlane Version ==="
           bundle exec fastlane --version
 
@@ -174,7 +152,7 @@ jobs:
           DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
           DISTRIBUTION_PASSWORD: ${{ secrets.DISTRIBUTION_PASSWORD }}
           APP_STORE_PROFILE_BASE64: ${{ secrets.APP_STORE_PROFILE_BASE64 }}
-        run: bundle exec fastlane ${{ steps.build_type.outputs.lane }}
+        run: bundle exec fastlane build_and_upload
 
       - name: React to success
         if: success()
