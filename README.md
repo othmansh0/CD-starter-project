@@ -1,133 +1,153 @@
-# CD Starter Project
+# iOS CI/CD Starter Project
 
-A production-ready iOS calculator app with fully automated CI/CD pipeline for TestFlight deployment.
+A production-ready iOS CI/CD pipeline demonstrating automated testing and TestFlight deployment using GitHub Actions and Fastlane.
 
-## 🚀 CI/CD Pipeline
+## 🎯 **Main Features**
 
-This project demonstrates a **complete, working iOS CI/CD setup** using GitHub Actions and Fastlane. The pipeline is clean, battle-tested, and production-ready.
+- **Comment-Triggered Builds** - Deploy with `/build` comments on PRs
+- **Automated Testing** - Unit tests run on every PR to develop
+- **TestFlight Integration** - Direct uploads with auto-distribution to internal testers
+- **Smart Build Management** - Automatic build number increment with conflict resolution
+- **Flexible Code Signing** - Supports both Match (team) and manual certificate workflows
+- **Real-Time Status** - Emoji reactions show build progress (👀 → 🚀/😞)
+- **Export Compliance** - Automatic handling, no manual submission needed
 
-### ✅ **Key Features**
+## ⚙️ **Tech Stack**
 
-- **Automated TestFlight Distribution** - Works with Developer role permissions
-- **Smart Build Number Management** - Automatic increment with conflict resolution
-- **Flexible Certificate Management** - Supports both Match and manual certificates
-- **Real-time Status Updates** - Emoji reactions on PR comments
-- **Export Compliance Handling** - No manual compliance submission needed
+- **CI/CD**: GitHub Actions
+- **Build Automation**: Fastlane 2.228.0
+- **iOS**: Xcode 16.1+, iOS 16.0+ deployment target
+- **Language**: Swift 5.0, Ruby 3.2+
 
-## 📱 Usage
+## 🔄 **Workflows**
 
-### Build Commands
+### 1. Testing Workflow (`testing_workflow.yaml`)
+- **Trigger**: PRs to `develop` branch + manual dispatch
+- **Actions**: Checkout → Setup Xcode → Install dependencies → Run tests
+- **Job Name**: `test` (referenced by build workflow)
 
-Comment `/build` on any Pull Request to trigger a TestFlight build.
+### 2. Build Workflow (`build-on-comment.yml`)  
+- **Trigger**: `/build` comments on PRs
+- **Validations**: Branch check (develop/feature/*) + test status verification
+- **Actions**: Build → Sign → Upload to TestFlight
+- **Status**: Real-time emoji reactions on comments
 
-### Status Indicators
+## 📈 **Build Process Flow**
 
-Real-time feedback through emoji reactions:
-- 👀 **Building** - Build in progress
-- 🚀 **Success** - Build uploaded to TestFlight
-- 😞 **Failed** - Build failed (check logs)
-
-## ⚙️ Setup
-
-### 1. Apple Developer Account
-- Active Apple Developer Program membership
-- App Store Connect access
-- **Developer role is sufficient** (Admin not required)
-
-### 2. GitHub Secrets
-
-Add these to your repository (Settings → Secrets → Actions):
-
-```bash
-# App Store Connect API Key (Required)
-API_KEY_ID          # Your API Key ID
-API_ISSUER_ID       # Your Issuer ID  
-API_KEY_BASE64      # Base64 encoded .p8 file
-
-# Apple Developer Account (Required)
-DEVELOPMENT_TEAM    # Your Team ID
-FASTLANE_USERNAME   # Your Apple ID email
-
-# Code Signing (Required)
-DISTRIBUTION_CERTIFICATE    # Base64 encoded .p12 certificate
-DISTRIBUTION_PASSWORD       # Certificate password
-APP_STORE_PROFILE_BASE64    # Base64 encoded provisioning profile
-
-# Optional - For team certificate management
-MATCH_GIT_URL       # Git repository for certificates
+```
+PR Comment: /build
+    ↓
+👀 Building (emoji reaction)
+    ↓
+Branch Validation (develop/feature/* only)
+    ↓
+Test Status Check (must not be failed)
+    ↓
+Environment Setup (Xcode, Ruby, Fastlane)
+    ↓
+Code Signing (certificates + provisioning profiles)
+    ↓
+Build Archive (Release configuration)
+    ↓
+TestFlight Upload (with changelog)
+    ↓
+🚀 Success / 😞 Failure (emoji reaction)
 ```
 
-### 3. API Key Setup
+## 🚀 **Quick Start**
 
-1. Go to [App Store Connect](https://appstoreconnect.apple.com) → Users and Access → Keys
-2. Create API Key with **Developer** role
-3. Download `.p8` file
-4. Base64 encode: `base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy`
+### 1. Prerequisites
+- Active Apple Developer Program membership
+- App Store Connect access (Developer role sufficient)
+- GitHub repository with Actions enabled
+
+### 2. Required Secrets
+
+Add to **Settings → Secrets → Actions**:
+
+```bash
+# App Store Connect API
+API_KEY_ID=XXXXXXXXXX          # App Store Connect API Key ID
+API_ISSUER_ID=xxxxxxxx-xxxx    # App Store Connect Issuer ID  
+API_KEY_BASE64=LS0tLS1CRUd...  # Base64 encoded .p8 file
+
+# Apple Developer Account
+DEVELOPMENT_TEAM=F62HZKRPDV     # Apple Developer Team ID
+FASTLANE_USERNAME=you@email.com # Apple ID email
+
+# Code Signing
+DISTRIBUTION_CERTIFICATE=MII... # Base64 encoded .p12 certificate
+DISTRIBUTION_PASSWORD=password  # Certificate password
+APP_STORE_PROFILE_BASE64=MII... # Base64 encoded provisioning profile
+```
+
+### 3. API Key Setup Steps
+1. Visit [App Store Connect](https://appstoreconnect.apple.com) → Users and Access → Keys
+2. Create new key with **Developer** role
+3. Download `.p8` file  
+4. Convert to Base64: `base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy`
 5. Add to GitHub secrets as `API_KEY_BASE64`
 
-## 🏗️ Architecture
+### 4. Usage
+1. Create PR to `develop` branch (tests run automatically)
+2. Comment `/build` on PR (triggers TestFlight deployment)
+3. Monitor emoji reactions: 👀 (building) → 🚀 (success) / 😞 (failed)
 
-### Workflows
-- **`testing_workflow.yaml`** - Runs tests on PRs to develop
-- **`build-on-comment.yml`** - Builds and deploys on `/build` comments
+## 🏗️ **Project Structure**
 
-### Fastlane Lanes
-- **`build_and_upload`** - Complete build and TestFlight upload
-- **`test`** - Run unit tests
-
-### Build Flow
 ```
-/build comment → Setup Environment → Fetch Build Number → 
-Code Signing → Build Archive → Upload to TestFlight → 
-Internal Testers Auto-Access
+├── .github/workflows/
+│   ├── testing_workflow.yaml      # Automated testing on PRs
+│   └── build-on-comment.yml       # Comment-triggered builds
+├── fastlane/
+│   ├── Fastfile                   # Build automation logic
+│   ├── Appfile                    # App configuration
+│   ├── Matchfile                  # Certificate management (optional)
+│   └── template.env               # Environment variables template
+├── CD starter project/            # iOS app source code
+├── CD starter projectTests/       # Unit tests
+├── CD-starter-project-Info.plist  # Export compliance configuration
+├── Gemfile                        # Ruby dependencies
+└── .gitignore                     # Comprehensive exclusions
 ```
 
-## 💻 Local Development
+## 🔧 **Fastlane Configuration**
 
-### Requirements
-- **Xcode 16.1+**
-- **iOS 16.0+** deployment target
-- **Ruby 3.2+** for Fastlane
+### Available Lanes
+- `fastlane test` - Run unit tests locally
+- `fastlane build_and_upload` - Build and upload to TestFlight
 
-### Quick Start
+### Key Features
+- **Dual Certificate Support**: Match (team sharing) or manual (individual)
+- **Build Number Management**: Fetches latest from TestFlight and increments
+- **Error Handling**: Graceful handling of build number conflicts
+- **CI Optimization**: Temporary keychain management for secure builds
+
+## 💻 **Local Development**
+
+### Setup
 ```bash
+# Clone repository
+git clone <your-repo-url>
+cd <project-directory>
+
 # Install dependencies
 bundle install
 
 # Run tests
 bundle exec fastlane test
-
-# Build for TestFlight (requires secrets)
-bundle exec fastlane build_and_upload
 ```
 
-## 📁 Project Structure
+### Xcode Project
+- Open `CD starter project.xcodeproj`
+- Build and run on simulator/device
+- Tests located in `CD starter projectTests/`
 
-```
-├── .github/workflows/          # CI/CD workflows
-├── fastlane/                   # Build automation
-│   ├── Fastfile               # Main build configuration
-│   ├── Appfile                # App settings
-│   └── template.env           # Environment template
-├── CD starter project/         # iOS app source
-└── .gitignore                 # Comprehensive exclusions
-```
+## 🔒 **Security & Best Practices**
 
-## 🔒 Security
-
-- ✅ **Encrypted secrets** in GitHub
-- ✅ **Temporary file cleanup** after builds
-- ✅ **Proper keychain management** in CI
-- ✅ **No sensitive data in logs**
-
-## 🤝 Contributing
-
-1. **Create feature branch** from `develop`
-2. **Make changes** and add tests
-3. **Create Pull Request**
-4. **Test with `/build`** command
-5. **Merge** when ready
-
----
-
-**This setup is production-ready and battle-tested. Perfect for learning iOS CI/CD best practices.** 🎯
+- ✅ All secrets encrypted in GitHub
+- ✅ Temporary file cleanup after builds  
+- ✅ Proper keychain management in CI
+- ✅ No sensitive data in logs
+- ✅ Branch protection with test validation
+- ✅ Comprehensive .gitignore for iOS projects
