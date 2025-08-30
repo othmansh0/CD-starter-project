@@ -276,7 +276,6 @@ platform :ios do
     scan(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
-      clean: true,
       only_testing: ["CD starter projectTests"]
     )
   end
