@@ -277,21 +277,24 @@ platform :ios do
     destination_value = ENV["SCAN_DESTINATION"]
     
     if destination_value && !destination_value.empty?
-      # ALWAYS use devices approach to bypass destination validation completely
-      # Extract device name from destination string
+      # Use destination WITHOUT OS version to avoid iOS version validation
+      # Extract device name from destination string  
       device_name = "iPhone 16 Pro"  # Default fallback
       if match = destination_value.match(/name=([^,]+)/)
         device_name = match[1]
       end
       
-      UI.message("🧭 Using devices bypass approach with: #{device_name}")
+      # Create destination with ONLY platform and name - NO OS VERSION
+      no_os_destination = "platform=iOS Simulator,name=#{device_name}"
+      
+      UI.message("🧭 Using no-OS destination approach: #{no_os_destination}")
       UI.message("🔍 Original destination was: #{destination_value}")
       
       run_tests(
         project: "CD starter project.xcodeproj",
         scheme: "CD starter project", 
         clean: true,
-        devices: [device_name],
+        destination: no_os_destination,
         sdk: "iphonesimulator",
         xcargs: "-destination-timeout 180 -allowProvisioningUpdates",
         only_testing: ["CD starter projectTests"],
