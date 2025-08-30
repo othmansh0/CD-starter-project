@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = CalculatorViewModel()
     @State private var animateButton: String? = nil
-    //
+    
     private static let buttonLayout: [[CalculatorButton]] = [
         [.clear, .plusMinus, .percent, .divide],
         [.seven, .eight, .nine, .multiply],
