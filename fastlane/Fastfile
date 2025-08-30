@@ -277,7 +277,7 @@ platform :ios do
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
       clean: true,
-      destination: "platform=iOS Simulator,OS=latest",
+      device: ENV["TEST_DEVICE"] || "iPhone 16 Pro",
       only_testing: ["CD starter projectTests"]
     )
   end
