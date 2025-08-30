@@ -273,64 +273,20 @@ platform :ios do
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
   lane :test do
-    simulator_udid = ENV["SIMULATOR_UDID"]
-    destination_value = ENV["SCAN_DESTINATION"]
+    UI.message("🧭 Using ultra-simple device approach to avoid all SDK conflicts")
+    UI.message("📱 Letting xcodebuild pick best available iOS version for iPhone 16 Pro")
     
-    if destination_value && !destination_value.empty?
-      # Use destination WITHOUT OS version to avoid iOS version validation
-      # Extract device name from destination string  
-      device_name = "iPhone 16 Pro"  # Default fallback
-      if match = destination_value.match(/name=([^,]+)/)
-        device_name = match[1]
-      end
-      
-      # Create destination with ONLY platform and name - NO OS VERSION
-      no_os_destination = "platform=iOS Simulator,name=#{device_name}"
-      
-      UI.message("🧭 Using no-OS destination approach: #{no_os_destination}")
-      UI.message("🔍 Original destination was: #{destination_value}")
-      
-      run_tests(
-        project: "CD starter project.xcodeproj",
-        scheme: "CD starter project", 
-        clean: true,
-        destination: no_os_destination,
-        sdk: "iphonesimulator",
-        xcargs: "-destination-timeout 180 -allowProvisioningUpdates",
-        only_testing: ["CD starter projectTests"],
-        skip_package_dependencies_resolution: true
-      )
-    elsif simulator_udid && !simulator_udid.empty?
-      # Fallback to UDID-based destination if name+OS fails
-      udid_destination = "platform=iOS Simulator,id=#{simulator_udid}"
-      UI.message("🧭 Using UDID fallback destination: #{udid_destination}")
-      
-      run_tests(
-        project: "CD starter project.xcodeproj",
-        scheme: "CD starter project", 
-        clean: true,
-        destination: udid_destination,
-        skip_detect_devices: true,
-        sdk: "iphonesimulator",
-        xcargs: "-destination-timeout 180 -allowProvisioningUpdates",
-        only_testing: ["CD starter projectTests"],
-        skip_package_dependencies_resolution: true
-      )
-    else
-      # Final fallback to device name (bypasses destination validation entirely)
-      UI.message("🧭 No destination provided, falling back to devices approach")
-      
-      run_tests(
-        project: "CD starter project.xcodeproj",
-        scheme: "CD starter project",
-        clean: true,
-        devices: ["iPhone 16 Pro"],
-        sdk: "iphonesimulator", 
-        xcargs: "-destination-timeout 180 -allowProvisioningUpdates",
-        only_testing: ["CD starter projectTests"],
-        skip_package_dependencies_resolution: true
-      )
-    end
+    run_tests(
+      project: "CD starter project.xcodeproj",
+      scheme: "CD starter project",
+      clean: true,
+      # Ultra-simple: just platform and device name, NO OS specification
+      destination: "platform=iOS Simulator,name=iPhone 16 Pro",
+      only_testing: ["CD starter projectTests"],
+      skip_package_dependencies_resolution: true,
+      # Remove sdk specification to avoid conflicts
+      xcargs: "-destination-timeout 180 -allowProvisioningUpdates"
+    )
   end
 
 
