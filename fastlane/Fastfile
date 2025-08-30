@@ -276,30 +276,30 @@ platform :ios do
     simulator_udid = ENV["SIMULATOR_UDID"]
     destination_value = ENV["SCAN_DESTINATION"]
     
-    if simulator_udid && !simulator_udid.empty?
-      # Use UDID-based destination (most reliable)
+    if destination_value && !destination_value.empty?
+      # Use name+OS-based destination (more reliable than UDID for xcodebuild)
+      UI.message("🧭 Using name+OS destination: #{destination_value}")
+      
+      run_tests(
+        project: "CD starter project.xcodeproj",
+        scheme: "CD starter project", 
+        clean: true,
+        destination: destination_value,
+        skip_detect_devices: true,
+        sdk: "iphonesimulator",
+        xcargs: "-destination-timeout 180",
+        only_testing: ["CD starter projectTests"]
+      )
+    elsif simulator_udid && !simulator_udid.empty?
+      # Fallback to UDID-based destination if name+OS fails
       udid_destination = "platform=iOS Simulator,id=#{simulator_udid}"
-      UI.message("🧭 Using UDID-based destination: #{udid_destination}")
+      UI.message("🧭 Using UDID fallback destination: #{udid_destination}")
       
       run_tests(
         project: "CD starter project.xcodeproj",
         scheme: "CD starter project", 
         clean: true,
         destination: udid_destination,
-        skip_detect_devices: true,
-        sdk: "iphonesimulator",
-        xcargs: "-destination-timeout 180",
-        only_testing: ["CD starter projectTests"]
-      )
-    elsif destination_value && !destination_value.empty?
-      # Fallback to resolved destination
-      UI.message("🧭 Using resolved destination: #{destination_value}")
-      
-      run_tests(
-        project: "CD starter project.xcodeproj",
-        scheme: "CD starter project",
-        clean: true, 
-        destination: destination_value,
         skip_detect_devices: true,
         sdk: "iphonesimulator",
         xcargs: "-destination-timeout 180",
