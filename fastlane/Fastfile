@@ -273,13 +273,27 @@ platform :ios do
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
   lane :test do
-    run_tests(
-      project: "CD starter project.xcodeproj",
-      scheme: "CD starter project",
-      clean: true,
-      devices: ["iPhone 16 Pro"],
-      only_testing: ["CD starter projectTests"]
-    )
+    destination_value = ENV["SCAN_DESTINATION"]
+    if destination_value && !destination_value.empty?
+      UI.message("🧭 Using resolved destination: #{destination_value}")
+      run_tests(
+        project: "CD starter project.xcodeproj",
+        scheme: "CD starter project",
+        clean: true,
+        destination: destination_value,
+        skip_detect_devices: true,
+        only_testing: ["CD starter projectTests"]
+      )
+    else
+      UI.message("🧭 No SCAN_DESTINATION provided, falling back to device name")
+      run_tests(
+        project: "CD starter project.xcodeproj",
+        scheme: "CD starter project",
+        clean: true,
+        devices: ["iPhone 16 Pro"],
+        only_testing: ["CD starter projectTests"]
+      )
+    end
   end
 
 
