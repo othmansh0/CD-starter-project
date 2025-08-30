@@ -283,6 +283,8 @@ platform :ios do
         clean: true,
         destination: destination_value_by_id,
         skip_detect_devices: true,
+        sdk: "iphonesimulator",
+        xcargs: "-destination-timeout 180",
         only_testing: ["CD starter projectTests"]
       )
     elsif destination_value && !destination_value.empty?
@@ -293,6 +295,8 @@ platform :ios do
         clean: true,
         destination: destination_value,
         skip_detect_devices: true,
+        sdk: "iphonesimulator",
+        xcargs: "-destination-timeout 180",
         only_testing: ["CD starter projectTests"]
       )
     else
@@ -302,6 +306,8 @@ platform :ios do
         scheme: "CD starter project",
         clean: true,
         devices: ["iPhone 16 Pro"],
+        sdk: "iphonesimulator",
+        xcargs: "-destination-timeout 180",
         only_testing: ["CD starter projectTests"]
       )
     end
