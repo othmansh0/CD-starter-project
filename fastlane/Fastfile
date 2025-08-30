@@ -277,38 +277,26 @@ platform :ios do
     destination_value = ENV["SCAN_DESTINATION"]
     
     if destination_value && !destination_value.empty?
-      # Extract device name from destination for devices parameter approach
-      # This bypasses xcodebuild destination validation issues
-      if destination_value =~ /name=([^,]+)/
-        device_name = $1
-        UI.message("🧭 Using devices approach with: #{device_name}")
-        
-        run_tests(
-          project: "CD starter project.xcodeproj",
-          scheme: "CD starter project", 
-          clean: true,
-          devices: [device_name],
-          sdk: "iphonesimulator",
-          xcargs: "-destination-timeout 180 -allowProvisioningUpdates",
-          only_testing: ["CD starter projectTests"],
-          skip_package_dependencies_resolution: true
-        )
-      else
-        # Fallback to destination if we can't parse device name
-        UI.message("🧭 Using name+OS destination: #{destination_value}")
-        
-        run_tests(
-          project: "CD starter project.xcodeproj",
-          scheme: "CD starter project", 
-          clean: true,
-          destination: destination_value,
-          skip_detect_devices: true,
-          sdk: "iphonesimulator",
-          xcargs: "-destination-timeout 180 -allowProvisioningUpdates",
-          only_testing: ["CD starter projectTests"],
-          skip_package_dependencies_resolution: true
-        )
+      # ALWAYS use devices approach to bypass destination validation completely
+      # Extract device name from destination string
+      device_name = "iPhone 16 Pro"  # Default fallback
+      if match = destination_value.match(/name=([^,]+)/)
+        device_name = match[1]
       end
+      
+      UI.message("🧭 Using devices bypass approach with: #{device_name}")
+      UI.message("🔍 Original destination was: #{destination_value}")
+      
+      run_tests(
+        project: "CD starter project.xcodeproj",
+        scheme: "CD starter project", 
+        clean: true,
+        devices: [device_name],
+        sdk: "iphonesimulator",
+        xcargs: "-destination-timeout 180 -allowProvisioningUpdates",
+        only_testing: ["CD starter projectTests"],
+        skip_package_dependencies_resolution: true
+      )
     elsif simulator_udid && !simulator_udid.empty?
       # Fallback to UDID-based destination if name+OS fails
       udid_destination = "platform=iOS Simulator,id=#{simulator_udid}"
