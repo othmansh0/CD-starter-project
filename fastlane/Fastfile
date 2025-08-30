@@ -273,14 +273,32 @@ platform :ios do
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
   lane :test do
-    destination_value_by_id = ENV["SCAN_DESTINATION_BY_ID"]
+    simulator_udid = ENV["SIMULATOR_UDID"]
     destination_value = ENV["SCAN_DESTINATION"]
-    if destination_value && !destination_value.empty?
+    
+    if simulator_udid && !simulator_udid.empty?
+      # Use UDID-based destination (most reliable)
+      udid_destination = "platform=iOS Simulator,id=#{simulator_udid}"
+      UI.message("🧭 Using UDID-based destination: #{udid_destination}")
+      
+      run_tests(
+        project: "CD starter project.xcodeproj",
+        scheme: "CD starter project", 
+        clean: true,
+        destination: udid_destination,
+        skip_detect_devices: true,
+        sdk: "iphonesimulator",
+        xcargs: "-destination-timeout 180",
+        only_testing: ["CD starter projectTests"]
+      )
+    elsif destination_value && !destination_value.empty?
+      # Fallback to resolved destination
       UI.message("🧭 Using resolved destination: #{destination_value}")
+      
       run_tests(
         project: "CD starter project.xcodeproj",
         scheme: "CD starter project",
-        clean: true,
+        clean: true, 
         destination: destination_value,
         skip_detect_devices: true,
         sdk: "iphonesimulator",
@@ -288,13 +306,15 @@ platform :ios do
         only_testing: ["CD starter projectTests"]
       )
     else
-      UI.message("🧭 No SCAN_DESTINATION provided, falling back to device name")
+      # Final fallback to device name
+      UI.message("🧭 No destination provided, falling back to device name")
+      
       run_tests(
         project: "CD starter project.xcodeproj",
         scheme: "CD starter project",
         clean: true,
         devices: ["iPhone 16 Pro"],
-        sdk: "iphonesimulator",
+        sdk: "iphonesimulator", 
         xcargs: "-destination-timeout 180",
         only_testing: ["CD starter projectTests"]
       )
