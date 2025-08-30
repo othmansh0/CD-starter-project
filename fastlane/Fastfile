@@ -273,12 +273,11 @@ platform :ios do
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
   lane :test do
-    destination_value = ENV["SCAN_DESTINATION"] || "generic/platform=iOS Simulator"
     run_tests(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
       clean: true,
-      destination: destination_value,
+      destination: "platform=iOS Simulator,name=iPhone 16 Pro",
       only_testing: ["CD starter projectTests"]
     )
   end
