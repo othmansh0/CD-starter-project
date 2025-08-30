@@ -58,7 +58,8 @@ jobs:
         fi
         echo "Resolved destination: ${DEST} (udid=${UDID})"
         echo "SCAN_DESTINATION=${DEST}" >> "$GITHUB_ENV"
-        echo "SCAN_DESTINATION_BY_ID=platform=iOS Simulator,id=${UDID}" >> "$GITHUB_ENV"
+        echo "SCAN_DESTINATION_BY_ID=platform=iOS Simulator,OS=${os},id=${UDID}" >> "$GITHUB_ENV"
+        echo "SIMULATOR_OS=${os}" >> "$GITHUB_ENV"
         echo "SIMULATOR_UDID=${UDID}" >> "$GITHUB_ENV"
     - name: Boot simulator
       run: |
