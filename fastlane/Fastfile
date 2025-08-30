@@ -273,9 +273,11 @@ platform :ios do
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
   lane :test do
-    scan(
+    run_tests(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
+      clean: true,
+      destination: "platform=iOS Simulator,OS=18.4,name=iPhone 16 Pro",
       only_testing: ["CD starter projectTests"]
     )
   end
