@@ -1,0 +1,188 @@
+name: Deploy to TestFlight
+
+# Single emoji reaction on /build comments (replaces previous):
+# 👀 - Build in progress (waiting/processing)
+# 🚀 - Build succeeded
+# 😞 - Build failed (any reason: tests, wrong branch, build error)
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+  checks: read
+  actions: read
+  contents: read
+
+jobs:
+  build-comment:
+    if: github.event.issue.pull_request != null && contains(github.event.comment.body, '/build')
+    runs-on: macos-15
+    steps:
+      - name: React to build start
+        run: |
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -X POST \
+            -d '{"content":"eyes"}' \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
+
+      - name: Get PR info
+        id: pr_info
+        run: |
+          PR_URL="${{ github.event.issue.pull_request.url }}"
+          PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "$PR_URL")
+          BRANCH=$(echo "$PR_DATA" | jq -r '.head.ref')
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "PR branch: $BRANCH"
+
+      - name: Validate branch
+        id: validate_branch
+        run: |
+          BRANCH="${{ steps.pr_info.outputs.branch }}"
+          # Allow develop branch and feature branches for testing
+          if [[ "$BRANCH" != "develop" && "$BRANCH" != feature/* ]]; then
+            echo "❌ Build can only be triggered from develop or feature branches. Current branch: $BRANCH"
+            # Get existing reactions and remove eyes reaction if it exists
+            REACTIONS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions")
+            
+            EYES_REACTION_ID=$(echo "$REACTIONS" | jq -r '.[] | select(.content=="eyes") | .id')
+            
+            if [ "$EYES_REACTION_ID" != "null" ] && [ -n "$EYES_REACTION_ID" ]; then
+              curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -X DELETE \
+                "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions/$EYES_REACTION_ID"
+            fi
+            
+            # Add failure reaction
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -X POST \
+              -d '{"content":"disappointed"}' \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
+            exit 1
+          fi
+          echo "✅ Branch validation passed: $BRANCH"
+
+      - name: Check test status
+        id: check_tests
+        run: |
+          # Get the PR's commit SHA
+          PR_URL="${{ github.event.issue.pull_request.url }}"
+          PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "$PR_URL")
+          COMMIT_SHA=$(echo "$PR_DATA" | jq -r '.head.sha')
+          
+          # Check for test workflow runs on this commit
+          CHECK_RUNS_URL="https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_SHA/check-runs"
+          CHECK_RUNS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "$CHECK_RUNS_URL")
+          
+          # Look for test workflow
+          TEST_STATUS=$(echo "$CHECK_RUNS" | jq -r '.check_runs[] | select(.name == "test") | .conclusion')
+          
+          echo "Test status found: $TEST_STATUS"
+          
+          # For testing purposes, allow build even if no tests found or if tests are pending
+          if [[ "$TEST_STATUS" == "failure" ]]; then
+            echo "❌ Tests have failed. Build cannot proceed."
+            # Get existing reactions and remove eyes reaction if it exists
+            REACTIONS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions")
+            
+            EYES_REACTION_ID=$(echo "$REACTIONS" | jq -r '.[] | select(.content=="eyes") | .id')
+            
+            if [ "$EYES_REACTION_ID" != "null" ] && [ -n "$EYES_REACTION_ID" ]; then
+              curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -X DELETE \
+                "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions/$EYES_REACTION_ID"
+            fi
+            
+            # Add failure reaction
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -X POST \
+              -d '{"content":"disappointed"}' \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
+            exit 1
+          elif [[ "$TEST_STATUS" == "success" ]]; then
+            echo "✅ Tests have passed, proceeding with build"
+            # Keep eyes reaction for now - will be replaced by final result
+          else
+            echo "⚠️ No test results found or tests pending. Proceeding with build for testing purposes."
+            # Keep eyes reaction for now - will be replaced by final result
+          fi
+
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr_info.outputs.branch }}
+          fetch-depth: 1
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.*'
+
+      - name: Setup Ruby and Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Create AuthKey.p8 file for Xcode authentication
+        run: |
+          echo "${{ secrets.API_KEY_BASE64 }}" | base64 --decode > /tmp/AuthKey_${{ secrets.API_KEY_ID }}.p8
+          chmod 600 /tmp/AuthKey_${{ secrets.API_KEY_ID }}.p8
+
+      - name: Run Fastlane Build
+        env:
+          API_KEY_ID: ${{ secrets.API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.API_ISSUER_ID }}
+          API_KEY_BASE64: ${{ secrets.API_KEY_BASE64 }}
+          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+          FASTLANE_USERNAME: ${{ secrets.FASTLANE_USERNAME }}
+          DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
+          DISTRIBUTION_PASSWORD: ${{ secrets.DISTRIBUTION_PASSWORD }}
+          APP_STORE_PROFILE_BASE64: ${{ secrets.APP_STORE_PROFILE_BASE64 }}
+        run: bundle exec fastlane build_and_upload
+
+      - name: React to success
+        if: success()
+        run: |
+          # Get existing reactions and remove eyes reaction if it exists
+          REACTIONS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions")
+          
+          EYES_REACTION_ID=$(echo "$REACTIONS" | jq -r '.[] | select(.content=="eyes") | .id')
+          
+          if [ "$EYES_REACTION_ID" != "null" ] && [ -n "$EYES_REACTION_ID" ]; then
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -X DELETE \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions/$EYES_REACTION_ID"
+          fi
+          
+          # Add success reaction
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -X POST \
+            -d '{"content":"rocket"}' \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions"
+
+      - name: React to failure
+        if: failure()
+        run: |
+          # Get existing reactions and remove eyes reaction if it exists
+          REACTIONS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions")
+          
+          EYES_REACTION_ID=$(echo "$REACTIONS" | jq -r '.[] | select(.content=="eyes") | .id')
+          
+          if [ "$EYES_REACTION_ID" != "null" ] && [ -n "$EYES_REACTION_ID" ]; then
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -X DELETE \
+              "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions/$EYES_REACTION_ID"
+          fi
+          
+          # Add failure reaction
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -X POST \
+            -d '{"content":"disappointed"}' \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" 
