@@ -8,89 +8,144 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var viewModel = CounterViewModel()
+    @StateObject private var viewModel = CalculatorViewModel()
+    @State private var animateButton: String? = nil
     
-    @State private var firstNumber: String = ""
-    @State private var secondNumber: String = ""
-    @State private var resultText: String = ""
+    private static let buttonLayout: [[CalculatorButton]] = [
+        [.clear, .plusMinus, .percent, .divide],
+        [.seven, .eight, .nine, .multiply],
+        [.four, .five, .six, .subtract],
+        [.one, .two, .three, .add],
+        [.zero, .decimal, .equals]
+    ]
     
     var body: some View {
-        VStack(spacing: 20) {
-            Text("🔢 Count: \(viewModel.count)")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            HStack(spacing: 20) {
-                Button("➕ Increment") {
-                    viewModel.increment()
+        GeometryReader { geometry in
+            ZStack {
+                backgroundGradient
+                
+                VStack(spacing: 0) {
+                    displayArea(geometry)
+                    
+                    buttonsArea
                 }
-                .buttonStyle(.borderedProminent)
-                Button("🔄 Reset") {
-                    viewModel.reset()
-                }
-                .buttonStyle(.bordered)
             }
-            Divider()
-            // Calculator section with basic arithmetic operations
-            VStack(spacing: 10) {
-                Text("🧮 Calculator")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                TextField("🔢 First Number", text: $firstNumber)
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                TextField("🔢 Second Number", text: $secondNumber)
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                HStack(spacing: 8) {
-                    Button("➕ Add") {
-                        if let a = Int(firstNumber), let b = Int(secondNumber) {
-                            resultText = "\(viewModel.add(a: a, b: b))"
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    Button("➖ Sub") {
-                        if let a = Int(firstNumber), let b = Int(secondNumber) {
-                            resultText = "\(viewModel.subtract(a: a, b: b))"
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    Button("✖️ Mul") {
-                        if let a = Int(firstNumber), let b = Int(secondNumber) {
-                            resultText = "\(viewModel.multiply(a: a, b: b))"
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    Button("➗ Div") {
-                        if let a = Double(firstNumber), let b = Double(secondNumber) {
-                            if b != 0 {
-                                resultText = String(format: "%.2f", Double(a) / Double(b))
-                            } else {
-                                resultText = "Cannot divide by zero"
-                            }
-                        }
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button("Power") {
-
-                        if let a = Double(firstNumber), let b = Double(secondNumber) {
-                            resultText = String(format: "%.2f", viewModel.power(base: a, exponent: b))
-                        }
-                    }
-                }
-                Button("🔍 Check Even/Odd") {
-                    if let n = Int(firstNumber) {
-                        resultText = viewModel.isEven(number: n) ? "✅ Even" : "❌ Odd"
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                Text("📊 Result: \(resultText)")
-                    .font(.headline)
-                    .foregroundColor(.blue)
-                    .padding(.top, 5)
-            }.padding()
         }
-        .padding()
+    }
+
+    private var backgroundGradient: some View {
+        LinearGradient(
+            colors: [
+                Color(.systemGray6),
+                Color(.systemGray5)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+    }
+
+    private func displayArea(_ geometry: GeometryProxy) -> some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            HStack {
+                Spacer()
+                Text(viewModel.operationSymbol ?? "")
+                    .font(.system(size: 20, weight: .regular, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 4)
+            }
+            .frame(height: 20)
+
+            Text(viewModel.formattedDisplay)
+                .font(.system(size: dynamicFontSize, weight: .light, design: .rounded))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .padding(.horizontal, 8)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .contentTransition(.numericText())
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
+        .frame(height: geometry.size.height * 0.3)
+    }
+
+    private var buttonsArea: some View {
+        VStack(spacing: 12) {
+            ForEach(Self.buttonLayout, id: \.self) { row in
+                HStack(spacing: 12) {
+                    ForEach(row, id: \.self) { button in
+                        CalculatorButtonView(
+                            button: button,
+                            isAnimating: animateButton == button.rawValue
+                        ) {
+                            handleButtonTap(button)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 30)
+    }
+    
+    private var dynamicFontSize: CGFloat {
+        let digitCount = viewModel.formattedDisplay.filter { $0.isNumber }.count
+        return switch digitCount {
+        case 10...: 40
+        case 8...9: 48
+        case 6...7: 56
+        default: 64
+        }
+    }
+    
+    // MARK: - Actions
+    private func handleButtonTap(_ button: CalculatorButton) {
+        animateButton(button.rawValue)
+        provideFeedback()
+        executeButtonAction(button)
+    }
+    
+    private func animateButton(_ buttonValue: String) {
+        withAnimation(.easeInOut(duration: 0.1)) {
+            animateButton = buttonValue
+        }
+        
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(100))
+            withAnimation(.easeInOut(duration: 0.1)) {
+                animateButton = nil
+            }
+        }
+    }
+    
+    private func provideFeedback() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+    
+    private func executeButtonAction(_ button: CalculatorButton) {
+        switch button {
+        case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine:
+            viewModel.tapNumber(button.rawValue)
+        case .decimal:
+            viewModel.tapDecimal()
+        case .clear:
+            viewModel.tapClear()
+        case .plusMinus:
+            viewModel.tapPlusMinus()
+        case .percent:
+            viewModel.tapPercent()
+        case .add:
+            viewModel.tapOperation(.add)
+        case .subtract:
+            viewModel.tapOperation(.subtract)
+        case .multiply:
+            viewModel.tapOperation(.multiply)
+        case .divide:
+            viewModel.tapOperation(.divide)
+        case .equals:
+            viewModel.tapEquals()
+        }
     }
 }
 
@@ -99,4 +154,3 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
-
