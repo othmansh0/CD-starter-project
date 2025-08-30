@@ -21,6 +21,5 @@ jobs:
       env:
         FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "90"
         FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "4"
-        TEST_DEVICE: "iPhone 16 Pro"
       run: |
         bundle exec fastlane test  
