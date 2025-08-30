@@ -25,7 +25,8 @@ jobs:
       run: |
         set -euo pipefail
         # Prefer newest runtimes available on the runner
-        OS_LIST=("18.6" "18.5" "18.4")
+        # Prefer 18.4 first — observed to work reliably with Xcode 16.1 on runners
+        OS_LIST=("18.4" "18.5" "18.6")
         NAME="iPhone 16 Pro"
         DEST=""
         UDID=""
