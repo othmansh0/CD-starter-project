@@ -20,7 +20,7 @@ jobs:
     - name: List available simulators
       run: xcrun simctl list devices
     - name: Pre-start simulator
-      run: xcrun instruments -w "iPhone 11" || true
+      run: xcrun instruments -w "iPhone 16 Pro" || true
     - name: Run Tests
       env:
         FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "90"

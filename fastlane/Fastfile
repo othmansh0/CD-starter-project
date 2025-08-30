@@ -277,7 +277,7 @@ platform :ios do
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
       clean: true,
-      devices: ["iPhone 11"],
+      devices: ["iPhone 16 Pro"],
       only_testing: ["CD starter projectTests"]
     )
   end
