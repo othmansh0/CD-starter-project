@@ -1,0 +1,292 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out:
+#   https://docs.fastlane.tools/actions
+# For a list of all available plugins, check out:
+#   https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+platform :ios do
+
+  # ---------------------------------------------------------------------------
+  # Main entry lane for CI/CD
+  # ---------------------------------------------------------------------------
+  desc "Build and upload the app to TestFlight"
+  lane :build_and_upload do
+    setup_ci_environment
+    
+    build(
+      app_identifier: ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project",
+      build_type: "appstore",
+      version_number: ENV["VERSION_NUMBER"],
+      build_number: ENV["BUILD_NUMBER"]
+    )
+    
+    # Upload to TestFlight using Almosafer's exact approach
+    begin
+      testflight(
+        username: ENV["FASTLANE_USERNAME"],
+        skip_waiting_for_build_processing: true,
+        changelog: "🚀 New build from CI/CD pipeline!\n\n" +
+                  "✅ Automated build and deployment\n" +
+                  "📱 Latest features and improvements\n" +
+                  "🔧 Built from commit: #{ENV['GITHUB_SHA'] || 'manual'}\n\n" +
+                  "Please test and provide feedback!"
+      )
+      
+      UI.success("🎉 Successfully uploaded to TestFlight!")
+      UI.message("📱 Build is now available for internal testers automatically")
+      UI.message("💡 For external testers, manually distribute from App Store Connect")
+      
+    rescue => e
+      if e.message.include?("bundle version must be higher") || e.message.include?("already been used")
+        UI.error("❌ Build number conflict detected")
+        UI.message("📱 This can happen due to TestFlight API delays or concurrent builds")
+        UI.message("🔧 The build number #{ENV['BUILD_NUMBER'] || 'unknown'} already exists in TestFlight")
+        UI.message("💡 Next build will use a higher number automatically")
+        UI.important("⚠️ Build number conflict - please retry the build")
+      else
+        raise e  # Re-raise other errors
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Build lane - simplified approach using match + sigh
+  # ---------------------------------------------------------------------------
+  private_lane :build do |options|
+    app_identifier = options[:app_identifier]
+    build_type = options[:build_type]
+    version_number = options[:version_number]
+    build_number = options[:build_number]
+
+    # Set version number if provided
+    if version_number
+      increment_version_number(version_number: version_number)
+    end
+    
+    # Setup App Store Connect API key first (needed for TestFlight API calls)
+    setup_api_key
+    
+    # Set build number using Almosafer's proven approach
+    if build_number
+      UI.message("🔢 Using provided build number: #{build_number}")
+      increment_build_number(build_number: build_number)
+    else
+      UI.message("🔢 Fetching latest TestFlight build number...")
+      new_build_number = bump_testflight_build_number
+      increment_build_number(build_number: new_build_number)
+    end
+
+    # Setup certificates and provisioning profiles using manual import
+    profile_uuid = setup_code_signing(
+      build_type: build_type,
+      app_identifier: app_identifier
+    )
+
+    # Build the app with manual signing (certificates and profiles already imported)
+    xcargs = "CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER=#{profile_uuid} CODE_SIGN_IDENTITY=\"Apple Distribution\""
+    gym(
+      project: "CD starter project.xcodeproj",
+      scheme: "CD starter project",
+      configuration: "Release",
+      output_directory: "./build",
+      output_name: "CD_starter_project",
+      clean: true,
+      export_method: "app-store",
+      include_bitcode: false,
+      xcargs: xcargs,
+      export_options: {
+        method: "app-store",
+        compileBitcode: false,
+        signingStyle: "manual",
+        provisioningProfiles: {
+          app_identifier => profile_uuid
+        },
+        teamID: ENV["DEVELOPMENT_TEAM"]
+      }
+    )
+
+    UI.success("✅ Build successful!")
+  end
+
+  # ---------------------------------------------------------------------------
+  # Code signing setup using match, cert, and sigh
+  # ---------------------------------------------------------------------------
+  private_lane :setup_code_signing do |options|
+    build_type = options[:build_type]
+    app_identifier = options[:app_identifier]
+    
+    UI.header("🔑 Setting up code signing for #{build_type} build...")
+
+    # Use match for certificate management (if git repo is configured)
+    if ENV["MATCH_GIT_URL"] && !ENV["MATCH_GIT_URL"].empty?
+      UI.message("📱 Using match for certificate management...")
+      
+      match(
+        type: build_type,
+        app_identifier: app_identifier,
+        git_url: ENV["MATCH_GIT_URL"],
+        username: ENV["FASTLANE_USERNAME"],
+        team_id: ENV["DEVELOPMENT_TEAM"],
+        readonly: true  # Don't create new certificates in CI
+      )
+    else
+      UI.message("⚠️ No MATCH_GIT_URL configured, using manual certificate import...")
+      
+      # Import existing certificate from environment variables
+      if ENV["DISTRIBUTION_CERTIFICATE"] && ENV["DISTRIBUTION_PASSWORD"]
+        UI.message("📜 Importing distribution certificate from environment...")
+        
+        # Decode and import the certificate
+        certificate_path = "/tmp/distribution_certificate.p12"
+        File.write(certificate_path, Base64.decode64(ENV["DISTRIBUTION_CERTIFICATE"]))
+        
+        # Import certificate to keychain
+        import_certificate(
+          certificate_path: certificate_path,
+          certificate_password: ENV["DISTRIBUTION_PASSWORD"],
+          keychain_name: "fastlane_tmp_keychain",
+          keychain_password: "temp_password"
+        )
+        
+        # Clean up temporary file
+        File.delete(certificate_path) if File.exist?(certificate_path)
+        
+        UI.success("✅ Distribution certificate imported successfully")
+      else
+        UI.error("❌ No distribution certificate found in environment variables")
+        UI.error("Please ensure DISTRIBUTION_CERTIFICATE and DISTRIBUTION_PASSWORD are set")
+        raise "Missing distribution certificate configuration"
+      end
+    end
+
+    # Use existing provisioning profile from environment variables
+    UI.message("📋 Setting up provisioning profiles from environment...")
+    profile_uuid = nil
+    if ENV["APP_STORE_PROFILE_BASE64"]
+      UI.message("📱 Importing App Store provisioning profile from environment...")
+      
+      # Decode and save the provisioning profile
+      profile_path = "/tmp/appstore_profile.mobileprovision"
+      File.write(profile_path, Base64.decode64(ENV["APP_STORE_PROFILE_BASE64"]))
+      
+      # Install the provisioning profile
+      install_provisioning_profile(path: profile_path)
+      
+      # Extract UUID from the profile
+      require 'plist'
+      profile_data = `security cms -D -i "#{profile_path}"`
+      profile_plist = Plist.parse_xml(profile_data)
+      profile_uuid = profile_plist['UUID']
+      UI.success("✅ App Store provisioning profile imported successfully (UUID: #{profile_uuid})")
+      
+      # Clean up temporary file
+      File.delete(profile_path) if File.exist?(profile_path)
+    else
+      UI.error("❌ No App Store provisioning profile found in environment variables")
+      UI.error("Please ensure APP_STORE_PROFILE_BASE64 is set")
+      raise "Missing App Store provisioning profile configuration"
+    end
+
+    UI.success("✅ Code signing setup complete!")
+    profile_uuid
+  end
+
+  # ---------------------------------------------------------------------------
+  # CI Environment setup
+  # ---------------------------------------------------------------------------
+  private_lane :setup_ci_environment do
+    UI.header("🔧 Setting up CI environment...")
+    
+    # Create a temporary keychain for CI
+    if is_ci
+      create_keychain(
+        name: "fastlane_tmp_keychain",
+        password: "temp_password",
+        default_keychain: true,
+        unlock: true,
+        timeout: 3600
+      )
+    end
+    
+    UI.success("✅ CI environment setup complete!")
+  end
+
+  # ---------------------------------------------------------------------------
+  # App Store Connect API key setup
+  # ---------------------------------------------------------------------------
+  private_lane :setup_api_key do
+    # Only setup API key if all required environment variables are present
+    if ENV["API_KEY_ID"] && ENV["API_ISSUER_ID"] && ENV["API_KEY_BASE64"]
+      app_store_connect_api_key(
+        key_id: ENV["API_KEY_ID"],
+        issuer_id: ENV["API_ISSUER_ID"],
+        key_content: ENV["API_KEY_BASE64"],
+        is_key_content_base64: true
+      )
+      UI.success("✅ App Store Connect API key setup successful")
+    else
+      UI.message("⚠️ App Store Connect API key not configured (missing environment variables)")
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Build number bump following standard approach
+  # ---------------------------------------------------------------------------
+  private_lane :bump_testflight_build_number do
+    UI.message("Fetching latest TestFlight build number...")
+
+    # Ensure API key is set up first
+    setup_api_key
+    
+    bumped_build_number = nil
+    
+    begin
+      # Get latest build number across ALL versions (don't specify version parameter)
+      build_number = latest_testflight_build_number(
+        app_identifier: ENV["APP_IDENTIFIER"] || "com.othmanshahrouri.cd.starter.project"
+      )
+      
+      # Increment by 1 (standard approach)
+      bumped_build_number = build_number.to_i + 1
+      UI.message("📈 Latest TestFlight build: #{build_number}, using build number: #{bumped_build_number}")
+    rescue => e
+      UI.message("⚠️ Could not fetch latest build number from TestFlight: #{e.message}")
+      UI.message("🔢 Using timestamp-based build number as fallback...")
+      # Use timestamp-based build number to ensure uniqueness
+      timestamp_build = Time.now.strftime("%Y%m%d%H%M")
+      bumped_build_number = timestamp_build.to_i
+    end
+    
+    bumped_build_number
+  end
+
+  # ---------------------------------------------------------------------------
+  # Testing lane
+  # ---------------------------------------------------------------------------
+  desc "Run unit tests"
+  lane :test do
+    UI.message("🧪 Running unit tests with SDK-only approach")
+    UI.message("📱 Using iphonesimulator SDK without destination specification")
+    
+    run_tests(
+      project: "CD starter project.xcodeproj",
+      scheme: "CD starter project",
+      clean: true,
+      sdk: "iphonesimulator",
+      only_testing: ["CD starter projectTests"],
+      skip_package_dependencies_resolution: true,
+      xcargs: "-destination-timeout 180 -allowProvisioningUpdates"
+    )
+  end
+
+
+
+end
