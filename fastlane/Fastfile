@@ -273,8 +273,19 @@ platform :ios do
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
   lane :test do
+    destination_value_by_id = ENV["SCAN_DESTINATION_BY_ID"]
     destination_value = ENV["SCAN_DESTINATION"]
-    if destination_value && !destination_value.empty?
+    if destination_value_by_id && !destination_value_by_id.empty?
+      UI.message("🧭 Using resolved destination by id: #{destination_value_by_id}")
+      run_tests(
+        project: "CD starter project.xcodeproj",
+        scheme: "CD starter project",
+        clean: true,
+        destination: destination_value_by_id,
+        skip_detect_devices: true,
+        only_testing: ["CD starter projectTests"]
+      )
+    elsif destination_value && !destination_value.empty?
       UI.message("🧭 Using resolved destination: #{destination_value}")
       run_tests(
         project: "CD starter project.xcodeproj",
