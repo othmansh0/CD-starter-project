@@ -273,14 +273,14 @@ platform :ios do
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
   lane :test do
-    UI.message("🧪 Running unit tests with generic iOS Simulator destination")
-    UI.message("📱 Using generic destination to avoid iOS version conflicts")
+    UI.message("🧪 Running unit tests with SDK-only approach")
+    UI.message("📱 Using iphonesimulator SDK without destination specification")
     
     run_tests(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
       clean: true,
-      destination: "generic/platform=iOS Simulator",
+      sdk: "iphonesimulator",
       only_testing: ["CD starter projectTests"],
       skip_package_dependencies_resolution: true,
       xcargs: "-destination-timeout 180 -allowProvisioningUpdates"
