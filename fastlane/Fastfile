@@ -273,13 +273,14 @@ platform :ios do
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
   lane :test do
-    UI.message("🧪 Running unit tests with automatic device selection")
-    UI.message("📱 Letting Fastlane and xcodebuild choose the best available simulator")
+    UI.message("🧪 Running unit tests with generic iOS Simulator destination")
+    UI.message("📱 Using generic destination to avoid iOS version conflicts")
     
     run_tests(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
       clean: true,
+      destination: "generic/platform=iOS Simulator",
       only_testing: ["CD starter projectTests"],
       skip_package_dependencies_resolution: true,
       xcargs: "-destination-timeout 180 -allowProvisioningUpdates"
