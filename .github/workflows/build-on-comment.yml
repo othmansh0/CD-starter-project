@@ -1,4 +1,4 @@
-name: Build on Comment
+name: Deploy to TestFlight
 
 # Single emoji reaction on /build comments (replaces previous):
 # 👀 - Build in progress (waiting/processing)
@@ -122,22 +122,11 @@ jobs:
         with:
           xcode-version: '16.*'
 
-      - name: Setup Ruby
+      - name: Setup Ruby and Fastlane
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler-cache: false
-
-      - name: Force Clean Fastlane Setup
-        run: |
-          # Only clean what's necessary
-          rm -rf vendor/bundle
-          gem install bundler --no-document
-          bundle install --verbose
-          echo "=== Installed Fastlane Version ==="
-          bundle exec fastlane --version
-
-
+          bundler-cache: true
 
       - name: Create AuthKey.p8 file for Xcode authentication
         run: |
