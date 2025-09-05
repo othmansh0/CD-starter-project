@@ -117,8 +117,10 @@ jobs:
           ref: ${{ steps.pr_info.outputs.branch }}
           fetch-depth: 1
 
-      - name: Setup Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.*'
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
