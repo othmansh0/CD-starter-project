@@ -273,20 +273,16 @@ platform :ios do
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
   lane :test do
-    UI.message("🧭 Using ultra-simple device approach to avoid all SDK conflicts")
-    UI.message("📱 Letting xcodebuild pick best available iOS version for selected device")
+    UI.message("🧪 Running unit tests with automatic device selection")
+    UI.message("📱 Letting Fastlane and xcodebuild choose the best available simulator")
     
     run_tests(
       project: "CD starter project.xcodeproj",
       scheme: "CD starter project",
       clean: true,
-      # Prefer device-only selection to avoid OS coupling on CI images
-      device: ENV["TEST_DEVICE"] || "iPhone 16 Pro",
       only_testing: ["CD starter projectTests"],
       skip_package_dependencies_resolution: true,
-      # Avoid explicit SDK/destination OS to prevent platform mismatches
-      xcargs: "-destination-timeout 180 -allowProvisioningUpdates",
-      ensure_devices_found: true
+      xcargs: "-destination-timeout 180 -allowProvisioningUpdates"
     )
   end
 

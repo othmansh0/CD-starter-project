@@ -23,43 +23,9 @@ jobs:
       - name: List available simulators
         run: xcrun simctl list devices
 
-      - name: Resolve simulator device (no OS specified)
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "=== Ultra-Simple Simulator Resolution ==="
-          echo "Finding any iPhone 16 Pro, ignoring OS version to avoid SDK conflicts"
-
-          UDID=$(xcrun simctl list devices | grep "iPhone 16 Pro (" | head -1 | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/') || true
-          if [ -n "${UDID}" ]; then
-            NAME="iPhone 16 Pro"
-          else
-            echo "No iPhone 16 Pro found, trying iPhone 16..."
-            UDID=$(xcrun simctl list devices | grep "iPhone 16 (" | head -1 | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/') || true
-            NAME="iPhone 16"
-          fi
-
-          if [ -z "${UDID}" ]; then
-            echo "::error::No compatible iPhone simulator found"
-            echo "=== Available simulators ==="
-            xcrun simctl list devices
-            exit 1
-          fi
-
-          echo "✅ Found: ${NAME} (${UDID})"
-          echo "SIMULATOR_UDID=${UDID}" >> "$GITHUB_ENV"
-          echo "TEST_DEVICE=${NAME}" >> "$GITHUB_ENV"
-
-      - name: Boot simulator
-        run: |
-          set -euo pipefail
-          echo "Booting simulator $SIMULATOR_UDID"
-          xcrun simctl boot "$SIMULATOR_UDID" || true
-          xcrun simctl bootstatus "$SIMULATOR_UDID" -b
 
       - name: Run Tests
         env:
           FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
           FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "4"
-          TEST_DEVICE: ${{ env.TEST_DEVICE }}
         run: bundle exec fastlane test
