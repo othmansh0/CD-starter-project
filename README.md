@@ -16,8 +16,8 @@ A production-ready iOS CI/CD pipeline demonstrating automated testing and TestFl
 
 - **CI/CD**: GitHub Actions
 - **Build Automation**: Fastlane 2.228.0
-- **iOS**: Xcode 16.1+, iOS 16.0+ deployment target
-- **Language**: Swift 5.0, Ruby 3.2+
+- **iOS**: Xcode 16.x, iOS 16.0+ deployment target
+- **Language**: Swift 5.0, Ruby 3.2
 
 ## 🔄 **Workflows**
 
@@ -58,7 +58,7 @@ TestFlight Upload (with changelog)
 
 ### 1. Prerequisites
 - Active Apple Developer Program membership
-- App Store Connect access (Developer role sufficient)
+- App Store Connect access (Developer role minimum)
 - GitHub repository with Actions enabled
 
 ### 2. Required Secrets
@@ -72,7 +72,7 @@ API_ISSUER_ID=xxxxxxxx-xxxx    # App Store Connect Issuer ID
 API_KEY_BASE64=LS0tLS1CRUd...  # Base64 encoded .p8 file
 
 # Apple Developer Account
-DEVELOPMENT_TEAM=F62HZKRPDV     # Apple Developer Team ID
+DEVELOPMENT_TEAM=XXXXXXXXXX    # Apple Developer Team ID
 FASTLANE_USERNAME=you@email.com # Apple ID email
 
 # Code Signing
@@ -151,3 +151,10 @@ bundle exec fastlane test
 - ✅ No sensitive data in logs
 - ✅ Branch protection with test validation
 - ✅ Comprehensive .gitignore for iOS projects
+
+## ⚠️ **Important Notes**
+
+- Only `develop` and `feature/*` branches can trigger builds
+- Tests must not be in failed state to proceed with builds
+- Build numbers are automatically incremented from TestFlight
+- Internal testers receive builds automatically; external testers require manual distribution
