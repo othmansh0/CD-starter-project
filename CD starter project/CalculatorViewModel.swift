@@ -8,10 +8,20 @@
 import Foundation
 import Combine
 
+/// The view model that handles the calculator's business logic and state
 final class CalculatorViewModel: ObservableObject {
+    /// Represents the mathematical operations that can be performed
     enum Operation: CaseIterable {
-        case add, subtract, multiply, divide
+        /// Addition operation
+        case add
+        /// Subtraction operation
+        case subtract
+        /// Multiplication operation
+        case multiply
+        /// Division operation
+        case divide
         
+        /// The symbol representing this operation
         var symbol: String {
             switch self {
             case .add: "+"
@@ -21,6 +31,11 @@ final class CalculatorViewModel: ObservableObject {
             }
         }
         
+        /// Performs the calculation between two operands
+        /// - Parameters:
+        ///   - lhs: The left-hand side operand
+        ///   - rhs: The right-hand side operand
+        /// - Returns: The result of the calculation, or nil if the operation is invalid (e.g., division by zero)
         func calculate(_ lhs: Double, _ rhs: Double) -> Double? {
             switch self {
             case .add: lhs + rhs
@@ -31,14 +46,21 @@ final class CalculatorViewModel: ObservableObject {
         }
     }
 
+    /// The current text displayed on the calculator
     @Published private(set) var displayText: String = "0"
+    /// The current operation being performed, if any
     @Published private(set) var currentOperation: Operation? = nil
 
+    /// The maximum number of digits that can be entered
     private let maximumDigits: Int = 9
+    /// The previous number entered before an operation was selected
     private var previousNumber: Double = 0
+    /// Whether the display should be reset on the next number input
     private var shouldResetDisplay: Bool = false
+    /// Whether the user is currently entering a number
     private var isEnteringNumber: Bool = false
     
+    /// Formatter for displaying numbers with proper decimal and thousands separators
     private lazy var numberFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
@@ -49,15 +71,20 @@ final class CalculatorViewModel: ObservableObject {
         return formatter
     }()
 
+    /// The symbol for the current operation, if any
     var operationSymbol: String? {
         currentOperation?.symbol
     }
 
+    /// The formatted display text with proper number formatting
     var formattedDisplay: String {
         formatDisplay(displayText)
     }
 
     // MARK: - Public Actions
+    
+    /// Handles a number button tap
+    /// - Parameter number: The number that was tapped (as a string)
     func tapNumber(_ number: String) {
         if shouldResetDisplay || !isEnteringNumber || displayText == "0" {
             displayText = number
@@ -68,6 +95,7 @@ final class CalculatorViewModel: ObservableObject {
         }
     }
 
+    /// Handles the decimal point button tap
     func tapDecimal() {
         if shouldResetDisplay {
             displayText = "0."
@@ -79,10 +107,12 @@ final class CalculatorViewModel: ObservableObject {
         }
     }
 
+    /// Handles the clear button tap
     func tapClear() {
         resetState()
     }
 
+    /// Handles the plus/minus button tap to toggle the sign of the current number
     func tapPlusMinus() {
         if let dec = currentDecimalValue() {
             displayText = decimalToString(-dec)
@@ -90,6 +120,7 @@ final class CalculatorViewModel: ObservableObject {
         }
     }
 
+    /// Handles the percent button tap to convert the current number to a percentage
     func tapPercent() {
         if let dec = currentDecimalValue() {
             let result = dec / Decimal(100)
@@ -98,6 +129,8 @@ final class CalculatorViewModel: ObservableObject {
         }
     }
 
+    /// Handles an operation button tap
+    /// - Parameter operation: The operation to perform
     func tapOperation(_ operation: Operation) {
         if let value = currentValue() {
             if currentOperation != nil && isEnteringNumber {
@@ -111,6 +144,7 @@ final class CalculatorViewModel: ObservableObject {
         }
     }
 
+    /// Handles the equals button tap to perform the calculation
     func tapEquals() {
         guard let operation = currentOperation, 
               let currentValue = currentValue() else { return }

@@ -7,10 +7,14 @@
 
 import SwiftUI
 
+/// The main calculator view that displays the calculator UI and handles user interactions
 struct ContentView: View {
+    /// The view model that handles the calculator's business logic
     @StateObject private var viewModel = CalculatorViewModel()
+    /// Tracks which button is currently being animated
     @State private var animateButton: String? = nil
     
+    /// The layout of calculator buttons in a 2D grid
     private static let buttonLayout: [[CalculatorButton]] = [
         [.clear, .plusMinus, .percent, .divide],
         [.seven, .eight, .nine, .multiply],
@@ -33,11 +37,12 @@ struct ContentView: View {
         }
     }
 
+    /// Creates a subtle background gradient for the calculator
     private var backgroundGradient: some View {
         LinearGradient(
             colors: [
-                Color(.systemGray6),
-                Color(.systemGray5)
+                Color(red: 0.92, green: 0.95, blue: 0.98),
+                Color(red: 0.85, green: 0.90, blue: 0.95)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -45,20 +50,23 @@ struct ContentView: View {
         .ignoresSafeArea()
     }
 
+    /// Renders the calculator display area showing the current operation and result
+    /// - Parameter geometry: The geometry proxy for responsive sizing
+    /// - Returns: A view containing the operation symbol and formatted display text
     private func displayArea(_ geometry: GeometryProxy) -> some View {
         VStack(alignment: .trailing, spacing: 8) {
             HStack {
                 Spacer()
                 Text(viewModel.operationSymbol ?? "")
                     .font(.system(size: 20, weight: .regular, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color(red: 0.4, green: 0.5, blue: 0.6))
                     .padding(.horizontal, 4)
             }
             .frame(height: 20)
 
             Text(viewModel.formattedDisplay)
                 .font(.system(size: dynamicFontSize, weight: .light, design: .rounded))
-                .foregroundStyle(.primary)
+                .foregroundStyle(Color(red: 0.1, green: 0.2, blue: 0.3))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .padding(.horizontal, 8)
@@ -70,6 +78,8 @@ struct ContentView: View {
         .frame(height: geometry.size.height * 0.3)
     }
 
+    /// Renders the calculator buttons grid layout
+    /// - Returns: A view containing the calculator buttons arranged in rows and columns
     private var buttonsArea: some View {
         VStack(spacing: 12) {
             ForEach(Self.buttonLayout, id: \.self) { row in
@@ -89,6 +99,8 @@ struct ContentView: View {
         .padding(.bottom, 30)
     }
     
+    /// Calculates the appropriate font size based on the number of digits in the display
+    /// - Returns: The font size that will fit the current display value
     private var dynamicFontSize: CGFloat {
         let digitCount = viewModel.formattedDisplay.filter { $0.isNumber }.count
         return switch digitCount {
@@ -100,12 +112,17 @@ struct ContentView: View {
     }
     
     // MARK: - Actions
+    
+    /// Handles the tap event on a calculator button
+    /// - Parameter button: The calculator button that was tapped
     private func handleButtonTap(_ button: CalculatorButton) {
         animateButton(button.rawValue)
         provideFeedback()
         executeButtonAction(button)
     }
     
+    /// Animates the button press with a subtle scale effect
+    /// - Parameter buttonValue: The raw value of the button to animate
     private func animateButton(_ buttonValue: String) {
         withAnimation(.easeInOut(duration: 0.1)) {
             animateButton = buttonValue
@@ -119,10 +136,13 @@ struct ContentView: View {
         }
     }
     
+    /// Provides haptic feedback when a button is tapped
     private func provideFeedback() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
     
+    /// Executes the appropriate action based on the button type
+    /// - Parameter button: The calculator button that was tapped
     private func executeButtonAction(_ button: CalculatorButton) {
         switch button {
         case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine:
