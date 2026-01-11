@@ -1,4 +1,4 @@
-# This script defines a GitHub Actions workflow that is triggered when a pull request is made to the `develop` branch, or when manually dispatched.
+# CI workflow for CD starter project
 
 name: CD starter project testing workflow
 run-name: Run by @${{ github.actor }}
@@ -8,12 +8,16 @@ on:
     branches: [ "develop" ]
 
 jobs:
-  # Separate lint job
   lint:
     name: SwiftLint
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Xcode 16
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.2'
 
       - name: Install SwiftLint
         run: brew install swiftlint
@@ -21,7 +25,6 @@ jobs:
       - name: Run SwiftLint
         run: swiftlint lint --reporter github-actions-logging
 
-  # Test job - runs on latest macOS/Xcode for testing
   test:
     name: Tests
     runs-on: macos-15
