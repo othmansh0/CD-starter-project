@@ -1,16 +1,14 @@
 # SwiftLint Configuration
-# Minimal config for Xcode 26 compatibility
 
 disabled_rules:
   - trailing_whitespace
   - line_length
+  - type_name
+  - identifier_name
 
 excluded:
   - Pods
   - .build
   - DerivedData
-  - "**/*.generated.swift"
-  - "**/Preview Content/*"
 
-# Keep rules simple for stability
 reporter: "xcode"
