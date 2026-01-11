@@ -16,7 +16,7 @@ A production-ready iOS CI/CD pipeline demonstrating automated testing and TestFl
 
 - **CI/CD**: GitHub Actions
 - **Build Automation**: Fastlane 2.229.0
-- **iOS**: Xcode 18.x (iOS 26 SDK), iOS 16.0+ deployment target
+- **iOS**: Xcode 26.x (iOS 26 SDK), iOS 16.0+ deployment target
 - **Language**: Swift 6.0, Ruby 3.3
 
 ## 🔄 **Workflows**
