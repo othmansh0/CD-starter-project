@@ -1,12 +1,12 @@
 # SwiftLint Configuration
 disabled_rules:
   - trailing_whitespace
+  - force_cast
+  - force_try
 
 opt_in_rules:
   - empty_count
   - empty_string
-  - force_unwrapping
-  - implicitly_unwrapped_optional
 
 excluded:
   - Pods

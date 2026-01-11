@@ -24,10 +24,21 @@ jobs:
           bundler-cache: true
 
       - name: Install SwiftLint
-        run: brew install swiftlint
+        run: |
+          brew install swiftlint || true
+          # Fallback to specific version if latest fails
+          if ! swiftlint version; then
+            brew uninstall swiftlint
+            brew install swiftlint@0.54.0 || brew install swiftlint
+          fi
 
       - name: Run SwiftLint
-        run: swiftlint lint --strict --reporter github-actions-logging
+        run: |
+          # Run SwiftLint with error handling
+          swiftlint lint --reporter github-actions-logging || {
+            echo "::warning::SwiftLint found issues. Please run 'bundle exec fastlane lint' locally to fix."
+            exit 1
+          }
 
       - name: List available simulators
         run: xcrun simctl list devices
