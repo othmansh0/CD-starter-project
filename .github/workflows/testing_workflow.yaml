@@ -23,15 +23,13 @@ jobs:
           ruby-version: '3.3'
           bundler-cache: true
 
-      - name: Run SwiftLint (Non-blocking)
-        continue-on-error: true
-        run: |
-          # SwiftLint may crash with Xcode 26 - make it non-blocking for now
-          if brew install swiftlint 2>/dev/null; then
-            swiftlint lint --reporter github-actions-logging || echo "::warning::SwiftLint found issues"
-          else
-            echo "::warning::SwiftLint installation failed - skipping (known issue with Xcode 26)"
-          fi
+      # SwiftLint - using official action for better Xcode compatibility
+      # Note: May need to wait for SwiftLint update for full Xcode 26 support
+      - name: Run SwiftLint
+        uses: cirruslabs/swiftlint-action@v1
+        continue-on-error: true  # Non-blocking until Xcode 26 compatibility confirmed
+        with:
+          version: latest
 
       - name: List available simulators
         run: xcrun simctl list devices

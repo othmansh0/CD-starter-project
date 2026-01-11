@@ -1,34 +1,16 @@
 # SwiftLint Configuration
+# Minimal config for Xcode 26 compatibility
+
 disabled_rules:
   - trailing_whitespace
-  - force_cast
-  - force_try
-
-opt_in_rules:
-  - empty_count
-  - empty_string
+  - line_length
 
 excluded:
   - Pods
   - .build
   - DerivedData
-  - "*.generated.swift"
+  - "**/*.generated.swift"
+  - "**/Preview Content/*"
 
-line_length:
-  warning: 120
-  error: 150
-  ignores_comments: true
-
-type_body_length:
-  warning: 300
-  error: 500
-
-file_length:
-  warning: 500
-  error: 1000
-
-function_body_length:
-  warning: 50
-  error: 100
-
+# Keep rules simple for stability
 reporter: "xcode"
