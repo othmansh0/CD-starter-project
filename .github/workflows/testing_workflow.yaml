@@ -11,19 +11,20 @@ jobs:
   # Separate lint job - runs on older macOS/Xcode for SwiftLint compatibility
   lint:
     name: SwiftLint
-    runs-on: macos-14  # Use macos-14 with Xcode 15.x for SwiftLint compatibility
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Xcode 15
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '15.4'  # SwiftLint works with Xcode 15.x
+          xcode-version: '15.4'
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
 
       - name: Run SwiftLint
-        uses: norio-nomura/action-swiftlint@3.2.1
-        with:
-          args: --reporter github-actions-logging
+        run: swiftlint lint --reporter github-actions-logging
 
   # Test job - runs on latest macOS/Xcode for testing
   test:
