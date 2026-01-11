@@ -23,6 +23,12 @@ jobs:
           ruby-version: '3.3'
           bundler-cache: true
 
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Run SwiftLint
+        run: swiftlint lint --strict --reporter github-actions-logging
+
       - name: List available simulators
         run: xcrun simctl list devices
 
