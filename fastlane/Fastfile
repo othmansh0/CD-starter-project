@@ -28,7 +28,7 @@ platform :ios do
       build_number: ENV["BUILD_NUMBER"]
     )
     
-    # Upload to TestFlight using Almosafer's exact approach
+    # Upload to TestFlight
     begin
       testflight(
         username: ENV["FASTLANE_USERNAME"],
@@ -74,7 +74,7 @@ platform :ios do
     # Setup App Store Connect API key first (needed for TestFlight API calls)
     setup_api_key
     
-    # Set build number using Almosafer's proven approach
+    # Set build number - fetch from TestFlight or use provided value
     if build_number
       UI.message("🔢 Using provided build number: #{build_number}")
       increment_build_number(build_number: build_number)
