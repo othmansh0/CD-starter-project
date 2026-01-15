@@ -1,5 +1,3 @@
-# CI workflow for CD starter project
-
 name: CD starter project testing workflow
 run-name: Run by @${{ github.actor }}
 on:
@@ -10,19 +8,11 @@ on:
 jobs:
   lint:
     name: SwiftLint
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Xcode 26
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '26.*'
-
       - name: Run SwiftLint
-        uses: swiftlint/swiftlint-github-action@v1
-        with:
-          version: '0.63.0'
+        run: swiftlint lint --reporter github-actions-logging
 
   test:
     name: Tests
