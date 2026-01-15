@@ -5,10 +5,12 @@ disabled_rules:
   - line_length
   - type_name
   - identifier_name
+  - redundant_optional_initialization
+  - vertical_whitespace
 
 excluded:
   - Pods
   - .build
   - DerivedData
 
-reporter: "xcode"
+reporter: "github-actions-logging"
