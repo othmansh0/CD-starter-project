@@ -30,9 +30,23 @@ platform :ios do
     
     # Upload to TestFlight
     begin
+      # Get branch name from env or git
+      branch_name = ENV['BRANCH_NAME']
+      if branch_name.nil? || branch_name.empty? || branch_name == 'unknown'
+        branch_name = `git rev-parse --abbrev-ref HEAD`.strip rescue 'unknown'
+      end
+      
+      # Get commit hash from env or git
+      commit_hash = ENV['GITHUB_SHA']&.slice(0, 7)
+      if commit_hash.nil? || commit_hash.empty?
+        commit_hash = `git rev-parse --short HEAD`.strip rescue 'manual'
+      end
+      
+      UI.message("📝 Branch: #{branch_name}, Commit: #{commit_hash}")
+      
       # Build changelog with branch and commit info
-      changelog_text = "Branch: #{ENV['BRANCH_NAME'] || 'unknown'}\n" +
-                      "Commit: #{ENV['GITHUB_SHA']&.slice(0, 7) || 'manual'}\n\n" +
+      changelog_text = "Branch: #{branch_name}\n" +
+                      "Commit: #{commit_hash}\n\n" +
                       "Automated build from CI/CD pipeline"
 
       testflight(
