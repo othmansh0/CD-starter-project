@@ -1,0 +1,14 @@
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+  - type_name
+  - identifier_name
+  - redundant_optional_initialization
+  - vertical_whitespace
+
+excluded:
+  - Pods
+  - .build
+  - DerivedData
+
+reporter: "github-actions-logging"

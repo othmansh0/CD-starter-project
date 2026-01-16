@@ -41,9 +41,8 @@ jobs:
         id: validate_branch
         run: |
           BRANCH="${{ steps.pr_info.outputs.branch }}"
-          # Allow develop branch and feature branches for testing
-          if [[ "$BRANCH" != "develop" && "$BRANCH" != feature/* ]]; then
-            echo "❌ Build can only be triggered from develop or feature branches. Current branch: $BRANCH"
+          if [[ "$BRANCH" != "develop" && "$BRANCH" != feature/* && "$BRANCH" != release/* ]]; then
+            echo "❌ Build can only be triggered from develop, feature, or release branches. Current branch: $BRANCH"
             # Get existing reactions and remove eyes reaction if it exists
             REACTIONS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions")
