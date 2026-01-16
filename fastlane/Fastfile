@@ -30,14 +30,28 @@ platform :ios do
     
     # Upload to TestFlight
     begin
+      # Get branch name using Fastlane's git_branch action (reads CI env vars automatically)
+      branch_name = ENV['BRANCH_NAME']
+      branch_name = git_branch if branch_name.nil? || branch_name.empty?
+      
+      # Get commit hash using Fastlane's last_git_commit action
+      commit_info = last_git_commit
+      commit_hash = ENV['GITHUB_SHA']&.slice(0, 7) || commit_info[:abbreviated_commit_hash]
+      
+      UI.message("📝 Branch: #{branch_name}, Commit: #{commit_hash}")
+      
+      # Build changelog with branch and commit info
+      changelog_text = "Branch: #{branch_name}\n" +
+                      "Commit: #{commit_hash}\n\n" +
+                      "Automated build from CI/CD pipeline"
+
       testflight(
         username: ENV["FASTLANE_USERNAME"],
-        skip_waiting_for_build_processing: true,
-        changelog: "🚀 New build from CI/CD pipeline!\n\n" +
-                  "✅ Automated build and deployment\n" +
-                  "📱 Latest features and improvements\n" +
-                  "🔧 Built from commit: #{ENV['GITHUB_SHA'] || 'manual'}\n\n" +
-                  "Please test and provide feedback!"
+        skip_waiting_for_build_processing: false,
+        changelog: changelog_text,
+        localized_build_info: {
+          "en-US" => { whats_new: changelog_text }
+        }
       )
       
       UI.success("🎉 Successfully uploaded to TestFlight!")
