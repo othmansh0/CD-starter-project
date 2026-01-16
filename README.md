@@ -32,6 +32,11 @@ A production-ready iOS CI/CD pipeline demonstrating automated testing and TestFl
 - **Actions**: Build → Sign → Upload to TestFlight
 - **Status**: Real-time emoji reactions on comments
 
+### 3. Release Workflow (`release.yml`)
+- **Trigger**: PR from `release/*` branch merged to `main`
+- **Actions**: Extract version from branch name → Update project → Build → Upload to TestFlight → Auto-create tag → Create GitHub Release
+- **Flow**: `release/1.2.0` → PR to `main` → `/build` for QA → Merge → Auto-release
+
 ## 📈 **Build Process Flow**
 
 ```
@@ -97,8 +102,9 @@ APP_STORE_PROFILE_BASE64=MII... # Base64 encoded provisioning profile
 
 ```
 ├── .github/workflows/
-│   ├── testing_workflow.yaml      # Automated testing on PRs
-│   └── build-on-comment.yml       # Comment-triggered builds
+│   ├── testing_workflow.yaml      # Automated testing + linting on PRs
+│   ├── build-on-comment.yml       # Comment-triggered builds
+│   └── release.yml                # Tag-triggered releases
 ├── fastlane/
 │   ├── Fastfile                   # Build automation logic
 │   ├── Appfile                    # App configuration
