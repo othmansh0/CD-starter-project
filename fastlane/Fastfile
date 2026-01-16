@@ -30,17 +30,13 @@ platform :ios do
     
     # Upload to TestFlight
     begin
-      # Get branch name from env or git
+      # Get branch name using Fastlane's git_branch action (reads CI env vars automatically)
       branch_name = ENV['BRANCH_NAME']
-      if branch_name.nil? || branch_name.empty? || branch_name == 'unknown'
-        branch_name = `git rev-parse --abbrev-ref HEAD`.strip rescue 'unknown'
-      end
+      branch_name = git_branch if branch_name.nil? || branch_name.empty?
       
-      # Get commit hash from env or git
-      commit_hash = ENV['GITHUB_SHA']&.slice(0, 7)
-      if commit_hash.nil? || commit_hash.empty?
-        commit_hash = `git rev-parse --short HEAD`.strip rescue 'manual'
-      end
+      # Get commit hash using Fastlane's last_git_commit action
+      commit_info = last_git_commit
+      commit_hash = ENV['GITHUB_SHA']&.slice(0, 7) || commit_info[:abbreviated_commit_hash]
       
       UI.message("📝 Branch: #{branch_name}, Commit: #{commit_hash}")
       
