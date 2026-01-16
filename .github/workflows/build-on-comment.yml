@@ -134,6 +134,7 @@ jobs:
 
       - name: Run Fastlane Build
         env:
+          BRANCH_NAME: ${{ steps.pr_info.outputs.branch }}
           API_KEY_ID: ${{ secrets.API_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.API_ISSUER_ID }}
           API_KEY_BASE64: ${{ secrets.API_KEY_BASE64 }}

@@ -33,11 +33,9 @@ platform :ios do
       testflight(
         username: ENV["FASTLANE_USERNAME"],
         skip_waiting_for_build_processing: true,
-        changelog: "🚀 New build from CI/CD pipeline!\n\n" +
-                  "✅ Automated build and deployment\n" +
-                  "📱 Latest features and improvements\n" +
-                  "🔧 Built from commit: #{ENV['GITHUB_SHA'] || 'manual'}\n\n" +
-                  "Please test and provide feedback!"
+        changelog: "Branch: #{ENV['BRANCH_NAME'] || 'unknown'}\n" +
+                  "Commit: #{ENV['GITHUB_SHA']&.slice(0, 7) || 'manual'}\n\n" +
+                  "Automated build from CI/CD pipeline"
       )
       
       UI.success("🎉 Successfully uploaded to TestFlight!")
