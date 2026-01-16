@@ -38,12 +38,15 @@ platform :ios do
       commit_info = last_git_commit
       commit_hash = ENV['GITHUB_SHA']&.slice(0, 7) || commit_info[:abbreviated_commit_hash]
       
-      UI.message("📝 Branch: #{branch_name}, Commit: #{commit_hash}")
+      # Get build number
+      build_num = get_build_number(xcodeproj: "CD starter project.xcodeproj")
+      build_date = Time.now.strftime('%b %d, %Y')
       
-      # Build changelog with branch and commit info
-      changelog_text = "Branch: #{branch_name}\n" +
-                      "Commit: #{commit_hash}\n\n" +
-                      "Automated build from CI/CD pipeline"
+      UI.message("📝 Branch: #{branch_name}, Commit: #{commit_hash}, Build: #{build_num}")
+      
+      # Build changelog - concise format
+      changelog_text = "#{branch_name} (#{commit_hash})\n" +
+                      "Build ##{build_num} • #{build_date}"
 
       testflight(
         username: ENV["FASTLANE_USERNAME"],
