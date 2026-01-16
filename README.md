@@ -119,7 +119,6 @@ APP_STORE_PROFILE_BASE64=MII... # Base64 encoded provisioning profile
 ## 🔧 **Fastlane Configuration**
 
 ### Available Lanes
-- `fastlane lint` - Run SwiftLint locally
 - `fastlane test` - Run unit tests locally
 - `fastlane build_and_upload` - Build and upload to TestFlight
 

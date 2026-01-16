@@ -269,18 +269,6 @@ platform :ios do
   end
 
   # ---------------------------------------------------------------------------
-  # Linting lane
-  # ---------------------------------------------------------------------------
-  desc "Run SwiftLint"
-  lane :lint do
-    swiftlint(
-      mode: :lint,
-      config_file: ".swiftlint.yml",
-      raise_if_swiftlint_error: false  # Non-blocking due to Xcode 26 compatibility issues
-    )
-  end
-
-  # ---------------------------------------------------------------------------
   # Testing lane
   # ---------------------------------------------------------------------------
   desc "Run unit tests"
