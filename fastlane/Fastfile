@@ -30,12 +30,18 @@ platform :ios do
     
     # Upload to TestFlight
     begin
+      # Build changelog with branch and commit info
+      changelog_text = "Branch: #{ENV['BRANCH_NAME'] || 'unknown'}\n" +
+                      "Commit: #{ENV['GITHUB_SHA']&.slice(0, 7) || 'manual'}\n\n" +
+                      "Automated build from CI/CD pipeline"
+
       testflight(
         username: ENV["FASTLANE_USERNAME"],
-        skip_waiting_for_build_processing: true,
-        changelog: "Branch: #{ENV['BRANCH_NAME'] || 'unknown'}\n" +
-                  "Commit: #{ENV['GITHUB_SHA']&.slice(0, 7) || 'manual'}\n\n" +
-                  "Automated build from CI/CD pipeline"
+        skip_waiting_for_build_processing: false,
+        changelog: changelog_text,
+        localized_build_info: {
+          "en-US" => { whats_new: changelog_text }
+        }
       )
       
       UI.success("🎉 Successfully uploaded to TestFlight!")
