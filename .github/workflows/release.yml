@@ -39,6 +39,7 @@ jobs:
 
       - name: Build and Upload to TestFlight
         env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
           API_KEY_ID: ${{ secrets.API_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.API_ISSUER_ID }}
           API_KEY_BASE64: ${{ secrets.API_KEY_BASE64 }}
