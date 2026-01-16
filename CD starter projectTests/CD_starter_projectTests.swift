@@ -40,7 +40,7 @@ final class CDStarterProjectTests: XCTestCase {
         viewModel.tapOperation(.multiply)
         viewModel.tapNumber("4")
         viewModel.tapEquals()
-        // (2 + 3) * 4 = 20
+
         XCTAssertEqual(viewModel.formattedDisplay, "20")
     }
 
