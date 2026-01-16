@@ -33,8 +33,9 @@ A production-ready iOS CI/CD pipeline demonstrating automated testing and TestFl
 - **Status**: Real-time emoji reactions on comments
 
 ### 3. Release Workflow (`release.yml`)
-- **Trigger**: Git tags matching `v*.*.*` (e.g., `v1.2.0`)
-- **Actions**: Extract version → Update project → Build → Upload to TestFlight → Create GitHub Release
+- **Trigger**: PR from `release/*` branch merged to `main`
+- **Actions**: Extract version from branch name → Update project → Build → Upload to TestFlight → Auto-create tag → Create GitHub Release
+- **Flow**: `release/1.2.0` → PR to `main` → `/build` for QA → Merge → Auto-release
 
 ## 📈 **Build Process Flow**
 
