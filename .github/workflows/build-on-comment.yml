@@ -18,7 +18,10 @@ permissions:
 
 jobs:
   build-comment:
-    if: github.event.issue.pull_request != null && contains(github.event.comment.body, '/build')
+    if: |
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '/build') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: macos-15
     steps:
       - name: React to build start
