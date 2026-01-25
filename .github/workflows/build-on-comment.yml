@@ -21,6 +21,29 @@ jobs:
     if: github.event.issue.pull_request != null && contains(github.event.comment.body, '/build')
     runs-on: macos-15
     steps:
+      - name: Check user permissions
+        run: |
+          COMMENTER="${{ github.event.comment.user.login }}"
+          RESPONSE=$(curl -s -w "\n%{http_code}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/collaborators/$COMMENTER/permission")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          if [[ "$HTTP_CODE" != "200" ]]; then
+            echo "❌ User $COMMENTER is not a collaborator"
+            exit 1
+          fi
+          
+          PERMISSION=$(echo "$BODY" | jq -r '.permission')
+          
+          if [[ "$PERMISSION" != "admin" && "$PERMISSION" != "write" ]]; then
+            echo "❌ User $COMMENTER has '$PERMISSION' permission - requires 'write' or 'admin' to trigger builds"
+            exit 1
+          fi
+          
+          echo "✅ User $COMMENTER has '$PERMISSION' permission - authorized to trigger builds"
+
       - name: React to build start
         run: |
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
